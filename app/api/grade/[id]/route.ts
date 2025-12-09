@@ -83,15 +83,18 @@ export async function PATCH(
         where: { id },
         data: { score: newScore }
       });
+
+      return NextResponse.json({ 
+        success: true, 
+        message: "อัปเดตคะแนนเรียบร้อยแล้ว",
+        newScore
+      });
     }
 
     return NextResponse.json({ 
       success: true, 
       message: "อัปเดตคะแนนเรียบร้อยแล้ว",
-      newScore: submission?.answers.reduce((sum: number, answer) => {
-        const score = answer.manualScore !== null ? answer.manualScore : answer.pointsEarned;
-        return sum + score;
-      }, 0)
+      newScore: 0
     });
   } catch (error) {
     console.error("Error updating grades:", error);
