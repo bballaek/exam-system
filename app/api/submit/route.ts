@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 interface StudentInfo {
   firstName: string;
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
     // 3. Database Transaction: Create ExamSubmission and StudentAnswers
     const studentName = `${studentInfo.firstName} ${studentInfo.lastName}`.trim();
 
-    const submission = await prisma.$transaction(async (tx) => {
+    const submission = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create ExamSubmission
       const newSubmission = await tx.examSubmission.create({
         data: {
