@@ -18,7 +18,8 @@ export async function GET() {
       }
     });
 
-    const formattedExamSets = examSets.map(exam => ({
+    type ExamSetType = typeof examSets[number];
+    const formattedExamSets = examSets.map((exam: ExamSetType) => ({
       id: exam.id,
       title: exam.title,
       description: exam.description,
