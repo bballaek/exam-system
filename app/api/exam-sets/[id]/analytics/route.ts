@@ -40,7 +40,7 @@ export async function GET(
       );
 
       const totalAnswers = answersForQuestion.length;
-      const correctAnswers = answersForQuestion.filter(a => {
+      const correctAnswers = answersForQuestion.filter((a: AnswerType) => {
         // Use manualScore if available, otherwise isCorrect
         if (a.isManualGraded && a.manualScore !== null) {
           return a.manualScore >= a.maxPoints * 0.5; // 50%+ is "correct" for manual grading
@@ -54,7 +54,7 @@ export async function GET(
 
       // Average points earned
       const avgPointsEarned = totalAnswers > 0
-        ? answersForQuestion.reduce((sum, a) => {
+        ? answersForQuestion.reduce((sum: number, a: AnswerType) => {
             const score = a.isManualGraded && a.manualScore !== null 
               ? a.manualScore 
               : a.pointsEarned;
@@ -88,7 +88,7 @@ export async function GET(
     // Overall statistics
     const totalSubmissions = examSet.submissions.length;
     const avgScore = totalSubmissions > 0
-      ? Math.round(examSet.submissions.reduce((sum, s) => sum + s.score, 0) / totalSubmissions)
+      ? Math.round(examSet.submissions.reduce((sum: number, s: SubmissionType) => sum + s.score, 0) / totalSubmissions)
       : 0;
     const avgPercentage = examSet.submissions.length > 0 && examSet.submissions[0]?.totalPoints > 0
       ? Math.round((avgScore / examSet.submissions[0].totalPoints) * 100)
