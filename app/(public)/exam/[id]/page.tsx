@@ -195,10 +195,20 @@ export default function PublicExamPage() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      // Build answers array with questionId to handle shuffled questions
+      const answersWithId = shuffledQuestions.map((question, index) => ({
+        questionId: question.id,
+        answer: userAnswers[index],
+      }));
+      
       const response = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ examSetId: examId, studentInfo, userAnswers }),
+        body: JSON.stringify({ 
+          examSetId: examId, 
+          studentInfo, 
+          answersWithId  // Send answers with questionId
+        }),
       });
       const result = await response.json();
       if (result.success) {
@@ -211,7 +221,7 @@ export default function PublicExamPage() {
       alert(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : "ไม่ทราบสาเหตุ"}`);
       setIsSubmitting(false);
     }
-  }, [examId, studentInfo, userAnswers, router, isSubmitting]);
+  }, [examId, studentInfo, userAnswers, shuffledQuestions, router, isSubmitting]);
 
   const isAnswered = (i: number) => {
     const a = userAnswers[i];

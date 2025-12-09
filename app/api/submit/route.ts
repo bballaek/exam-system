@@ -10,10 +10,15 @@ interface StudentInfo {
   classroom?: string;
 }
 
+interface AnswerWithId {
+  questionId: number;
+  answer: string | string[] | null;
+}
+
 interface SubmitPayload {
   examSetId: string;
   studentInfo: StudentInfo;
-  userAnswers: (string | string[] | null)[];
+  answersWithId: AnswerWithId[];
 }
 
 // Helper function to normalize answer for comparison
@@ -35,12 +40,12 @@ function arraysMatch(userAnswers: string[], correctAnswers: string[]): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body: SubmitPayload = await request.json();
-    const { examSetId, studentInfo, userAnswers } = body;
+    const { examSetId, studentInfo, answersWithId } = body;
 
     // Validate required fields
-    if (!examSetId || !studentInfo || !userAnswers) {
+    if (!examSetId || !studentInfo || !answersWithId) {
       return NextResponse.json(
-        { error: "Missing required fields: examSetId, studentInfo, or userAnswers" },
+        { error: "Missing required fields: examSetId, studentInfo, or answersWithId" },
         { status: 400 }
       );
     }
@@ -49,9 +54,7 @@ export async function POST(request: NextRequest) {
     const examSet = await prisma.examSet.findUnique({
       where: { id: examSetId },
       include: {
-        questions: {
-          orderBy: { id: 'asc' }
-        }
+        questions: true // Don't need orderBy since we use questionId
       }
     });
 
@@ -61,6 +64,11 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Create a map of questions by ID for quick lookup
+    const questionsMap = new Map(
+      examSet.questions.map(q => [q.id, q])
+    );
 
     // 2. Grade the exam
     let score = 0;
@@ -73,9 +81,16 @@ export async function POST(request: NextRequest) {
       maxPoints: number;
     }[] = [];
 
-    type QuestionType = typeof examSet.questions[number];
-    examSet.questions.forEach((question: QuestionType, index: number) => {
-      const userAnswer = userAnswers[index];
+    // Process each answer by questionId
+    for (const answerData of answersWithId) {
+      const question = questionsMap.get(answerData.questionId);
+      
+      if (!question) {
+        console.warn(`Question ${answerData.questionId} not found, skipping`);
+        continue;
+      }
+
+      const userAnswer = answerData.answer;
       const correctAnswers = question.correctAnswers;
       const points = question.points;
       
@@ -105,7 +120,7 @@ export async function POST(request: NextRequest) {
         pointsEarned,
         maxPoints: points,
       });
-    });
+    }
 
     // 3. Database Transaction: Create ExamSubmission and StudentAnswers
     const studentName = `${studentInfo.firstName} ${studentInfo.lastName}`.trim();

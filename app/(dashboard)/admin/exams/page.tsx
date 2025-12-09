@@ -42,6 +42,7 @@ export default function ExamManagementPage() {
   const [editSubject, setEditSubject] = useState("");
   const [editTimeLimit, setEditTimeLimit] = useState<number | null>(null);
   const [editShuffleQuestions, setEditShuffleQuestions] = useState(false);
+  const [editIsActive, setEditIsActive] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   
   // Analytics modal state
@@ -110,6 +111,7 @@ export default function ExamManagementPage() {
     setEditSubject(exam.subject || "");
     setEditTimeLimit(exam.timeLimitMinutes || null);
     setEditShuffleQuestions(exam.shuffleQuestions || false);
+    setEditIsActive(exam.isActive || false);
   };
 
   // Save edit
@@ -126,6 +128,7 @@ export default function ExamManagementPage() {
           subject: editSubject.trim() || null,
           timeLimitMinutes: editTimeLimit,
           shuffleQuestions: editShuffleQuestions,
+          isActive: editIsActive,
         }),
       });
 
@@ -310,14 +313,11 @@ export default function ExamManagementPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <button
-                          onClick={() => handleToggleActive(exam.id, exam.isActive)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                            exam.isActive
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
-                        >
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                          exam.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}>
                           {exam.isActive ? (
                             <>
                               <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
@@ -329,7 +329,7 @@ export default function ExamManagementPage() {
                               ปิด
                             </>
                           )}
-                        </button>
+                        </span>
                       </td>
                       <td className="px-4 py-4 text-center">
                         <span className="text-sm font-medium text-gray-700">
@@ -555,6 +555,27 @@ export default function ExamManagementPage() {
                   <span
                     className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                       editShuffleQuestions ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Active Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">เปิดใช้งานข้อสอบ</p>
+                  <p className="text-xs text-gray-500">นักเรียนจะเห็นข้อสอบนี้เมื่อเปิดใช้งาน</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditIsActive(!editIsActive)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                    editIsActive ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      editIsActive ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>
