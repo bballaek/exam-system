@@ -72,7 +72,8 @@ export async function PATCH(
     });
 
     if (submission) {
-      const newScore = submission.answers.reduce((sum, answer) => {
+      type AnswerType = typeof submission.answers[number];
+      const newScore = submission.answers.reduce((sum: number, answer: AnswerType) => {
         // Use manualScore if available, otherwise use pointsEarned
         const score = answer.manualScore !== null ? answer.manualScore : answer.pointsEarned;
         return sum + score;
@@ -87,7 +88,7 @@ export async function PATCH(
     return NextResponse.json({ 
       success: true, 
       message: "อัปเดตคะแนนเรียบร้อยแล้ว",
-      newScore: submission?.answers.reduce((sum, answer) => {
+      newScore: submission?.answers.reduce((sum: number, answer) => {
         const score = answer.manualScore !== null ? answer.manualScore : answer.pointsEarned;
         return sum + score;
       }, 0)
