@@ -29,10 +29,14 @@ export async function GET(
     }
 
     // Calculate analytics per question
-    const questionAnalytics = examSet.questions.map((question) => {
+    type QuestionType = typeof examSet.questions[number];
+    type SubmissionType = typeof examSet.submissions[number];
+    type AnswerType = SubmissionType['answers'][number];
+
+    const questionAnalytics = examSet.questions.map((question: QuestionType) => {
       // Get all answers for this question
-      const answersForQuestion = examSet.submissions.flatMap(sub => 
-        sub.answers.filter(a => a.questionId === question.id)
+      const answersForQuestion = examSet.submissions.flatMap((sub: SubmissionType) => 
+        sub.answers.filter((a: AnswerType) => a.questionId === question.id)
       );
 
       const totalAnswers = answersForQuestion.length;
