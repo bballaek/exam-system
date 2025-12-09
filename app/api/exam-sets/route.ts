@@ -27,7 +27,7 @@ export async function GET() {
       isActive: exam.isActive,
       createdAt: exam.createdAt.toISOString(),
       timeLimitMinutes: exam.timeLimitMinutes,
-      shuffleQuestions: exam.shuffleQuestions,
+      shuffleQuestions: (exam as ExamSetType & { shuffleQuestions?: boolean }).shuffleQuestions ?? false,
       scheduledStart: exam.scheduledStart?.toISOString() || null,
       scheduledEnd: exam.scheduledEnd?.toISOString() || null,
       questionCount: exam._count.questions,

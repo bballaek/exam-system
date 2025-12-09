@@ -20,7 +20,8 @@ export async function GET() {
     const shuffledQuestions = activeExam.questions.sort(() => Math.random() - 0.5);
 
     // 3. ส่งข้อมูลกลับไปให้หน้าเว็บ (ตัดเฉลยออก เพื่อกันเด็กแอบดู network tab)
-    const questionsForStudent = shuffledQuestions.map(q => ({
+    type QuestionType = typeof shuffledQuestions[number];
+    const questionsForStudent = shuffledQuestions.map((q: QuestionType) => ({
       id: q.id,
       text: q.text,
       type: q.type,
