@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Format submissions for the frontend
-    const formattedSubmissions = submissions.map(sub => ({
+    type SubmissionType = typeof submissions[number];
+    const formattedSubmissions = submissions.map((sub: SubmissionType) => ({
       id: sub.id,
       studentName: sub.studentName,
       studentId: sub.studentId,
