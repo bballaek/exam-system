@@ -1,0 +1,83 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 1. ตารางชุดข้อสอบ (Exam Sets)
+model ExamSet {
+  id          String   @id @default(uuid())
+  title       String   // เช่น "สอบกลางภาค 1/2568"
+  description String?
+  subject     String?  // ชื่อวิชา เช่น "คณิตศาสตร์", "วิทยาศาสตร์"
+  isActive    Boolean  @default(false) // ตัวเปิด-ปิด ให้เด็กเห็นหรือไม่
+  createdAt   DateTime @default(now())
+  
+  // Scheduling fields
+  scheduledStart   DateTime?  // เวลาเปิดสอบ
+  scheduledEnd     DateTime?  // เวลาปิดสอบ
+  timeLimitMinutes Int?       // จำกัดเวลาทำ (นาที)
+  shuffleQuestions Boolean @default(false) // สลับลำดับข้อสอบให้แต่ละคนไม่เหมือนกัน
+  
+  questions   Question[]
+  submissions ExamSubmission[]
+}
+
+// 2. ตารางตัวข้อสอบ
+model Question {
+  id             Int      @id @default(autoincrement())
+  text           String   // โจทย์
+  type           String   // 'CHOICE', 'SHORT', 'CODEMSA'
+  points         Int      @default(1)
+  
+  options        String[] // ตัวเลือก (ถ้ามี)
+  correctAnswers String[] // เฉลย
+  subQuestions   String[] // โจทย์ย่อย (สำหรับ CodeMSA)
+  
+  examSetId      String
+  examSet        ExamSet  @relation(fields: [examSetId], references: [id])
+}
+
+// 3. ตารางการส่งคำตอบของนักเรียน
+model ExamSubmission {
+  id            String   @id @default(uuid())
+  studentName   String
+  studentId     String
+  studentNumber String?  // เลขที่
+  classroom     String?  // ห้อง
+  score         Int
+  totalPoints   Int
+  submittedAt   DateTime @default(now())
+  
+  examSetId     String
+  examSet       ExamSet  @relation(fields: [examSetId], references: [id])
+  
+  answers       StudentAnswer[]
+}
+
+// 4. ตารางเก็บรายละเอียดคำตอบแต่ละข้อ (เผื่อมาดูย้อนหลัง)
+model StudentAnswer {
+  id             String   @id @default(uuid())
+  submissionId   String
+  submission     ExamSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  questionId     Int
+  answerValue    Json     // เก็บคำตอบ (รองรับทั้งข้อความและ Array)
+  
+  // Auto-grading fields
+  isCorrect      Boolean  @default(false)
+  pointsEarned   Int      @default(0)
+  maxPoints      Int      @default(1)
+  
+  // Manual grading fields
+  manualScore    Int?     // คะแนนที่ครูให้เอง (override auto-grade)
+  isManualGraded Boolean  @default(false)
+  gradedBy       String?  // ครูที่ตรวจ
+  gradedAt       DateTime? // เวลาที่ตรวจ
+}

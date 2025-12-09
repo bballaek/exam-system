@@ -1,0 +1,427 @@
+@import "tailwindcss";
+
+/* ============================================
+   🎬 ANIMATIONS
+   ============================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* ============================================
+   🎨 THEME SYSTEM - CSS Custom Properties
+   ============================================ */
+
+:root {
+  /* ============================================
+     🎨 THEME COLORS - Main Brand Colors
+     ============================================ */
+  
+  /* Primary - Pink/Coral (หลัก) */
+  --color-primary: #B93D49;
+  --color-primary-light: #D994A9;
+  --color-primary-lighter: #ffc0cb;
+  --color-primary-dark: #8c3d3d;
+  --color-primary-hover: #ea909f;
+  
+  /* Secondary - Brown/Chocolate (รอง) */
+  --color-secondary: #65544f;
+  --color-secondary-light: #7d6b65;
+  --color-secondary-dark: #654321;
+  
+  /* Accent - Orange/Warm */
+  --color-accent: #D36839;
+  --color-accent-light: #f4a261;
+  
+  /* Background Colors */
+  --color-bg: #f6f6f6;
+  --color-bg-light: #ffffff;
+  --color-bg-gradient-start: rgba(255, 153, 178, 0.5);
+  --color-bg-gradient-mid: rgba(255, 240, 245, 0.9);
+  --color-bg-gradient-end: rgba(255, 250, 250, 1);
+  
+  /* Text Colors */
+  --color-text: #1f1f1f;
+  --color-text-light: #333333;
+  --color-text-muted: #666666;
+  --color-text-subtle: #999999;
+  
+  /* Border Colors */
+  --color-border: #ddd;
+  --color-border-light: #eee;
+  --color-border-dark: #ccc;
+  
+  /* Status Colors */
+  --color-success: #45a049;
+  --color-error: #e74c3c;
+  --color-warning: #f4a261;
+  --color-info: #3498db;
+  
+  /* Social Colors */
+  --color-instagram: #E4405F;
+  --color-tiktok: #000000;
+  --color-paypal: #d4eaf7;
+
+  /* ============================================
+     🔘 BUTTON SIZES - Standardized Sizing
+     ============================================ */
+  
+  /* Small Button */
+  --btn-sm-py: 0.5rem;
+  --btn-sm-px: 1rem;
+  --btn-sm-text: 0.875rem;
+  
+  /* Medium Button (Default) */
+  --btn-md-py: 0.75rem;
+  --btn-md-px: 1.5rem;
+  --btn-md-text: 1rem;
+  
+  /* Large Button */
+  --btn-lg-py: 1rem;
+  --btn-lg-px: 2rem;
+  --btn-lg-text: 1.125rem;
+  
+  /* ============================================
+     🔤 FONTS
+     ============================================ */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: "Phudu", serif;
+  --font-body: "Outfit", sans-serif;
+  --font-thai: "Kanit", sans-serif;
+  --font-sarabun: var(--font-sarabun), "Sarabun", sans-serif;
+
+  /* ============================================
+     📏 SPACING
+     ============================================ */
+  --spacing: .25rem;
+  --spacing-xs: .5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* ============================================
+     📐 CONTAINER SIZES
+     ============================================ */
+  --container-3xs: 16rem;
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-7xl: 80rem;
+
+  /* ============================================
+     📝 TYPOGRAPHY
+     ============================================ */
+  --text-xs: .75rem;
+  --text-xs--line-height: calc(1 / .75);
+  --text-sm: .875rem;
+  --text-sm--line-height: calc(1.25 / .875);
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ============================================
+     🔘 BORDER RADIUS
+     ============================================ */
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 25px;
+  --radius-full: 50px;
+  --radius-circle: 50%;
+
+  /* ============================================
+     🌫️ SHADOWS
+     ============================================ */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.25);
+
+  /* ============================================
+     ⏱️ TRANSITIONS
+     ============================================ */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* ============================================
+     🎨 GRAY SCALE (oklch)
+     ============================================ */
+  --color-gray-50: oklch(98.5% .002 247.839);
+  --color-gray-100: oklch(96.7% .003 264.542);
+  --color-gray-200: oklch(92.8% .006 264.531);
+  --color-gray-300: oklch(87.2% .01 258.338);
+  --color-gray-400: oklch(70.7% .022 261.325);
+  --color-gray-500: oklch(55.1% .027 264.364);
+  --color-gray-600: oklch(44.6% .03 256.802);
+  --color-gray-700: oklch(37.3% .034 259.733);
+  --color-gray-800: oklch(27.8% .033 256.848);
+  --color-gray-900: oklch(21% .034 264.665);
+  --color-black: #000;
+  --color-white: #f6f6f6;
+
+  /* Icon Sizes */
+  --icon-xs: 1rem;
+  --icon-sm: 1.25rem;
+  --icon-md: 1.5rem;
+  --icon-lg: 2rem;
+  --icon-xl: 3rem;
+}
+
+/* ===== Tailwind Theme Integration ===== */
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --font-sans: var(--font-sarabun);
+  
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+}
+
+/* ===== Base Styles ===== */
+body {
+  background: var(--color-bg);
+  color: var(--color-text-light);
+  font-family: var(--font-sarabun);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+/* ===== Button Base Styles ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-family: inherit;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.btn-sm {
+  padding: var(--btn-sm-py) var(--btn-sm-px);
+  font-size: var(--btn-sm-text);
+}
+
+.btn-md {
+  padding: var(--btn-md-py) var(--btn-md-px);
+  font-size: var(--btn-md-text);
+}
+
+.btn-lg {
+  padding: var(--btn-lg-py) var(--btn-lg-px);
+  font-size: var(--btn-lg-text);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  padding: var(--btn-md-py) var(--btn-md-px);
+  font-size: var(--btn-md-text);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-primary:disabled {
+  background: var(--color-border);
+  color: var(--color-text-subtle);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--color-bg-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  padding: var(--btn-md-py) var(--btn-md-px);
+  font-size: var(--btn-md-text);
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary-lighter);
+  border-color: var(--color-primary);
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+  padding: var(--btn-md-py) var(--btn-md-px);
+  font-size: var(--btn-md-text);
+}
+
+.btn-success:hover {
+  background: #3d9142;
+}
+
+.btn-success:disabled {
+  background: var(--color-border);
+  color: var(--color-text-subtle);
+  cursor: not-allowed;
+}
+
+/* ===== Card Styles ===== */
+.card {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--color-primary);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.card-body {
+  padding: var(--spacing-lg);
+}
+
+/* ===== Input Styles ===== */
+.input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--text-base);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  background: var(--color-bg-light);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-lighter);
+}
+
+/* ===== Select Styles ===== */
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23666666'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+}
+
+/* ===== Alert Styles ===== */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+}
+
+.alert-warning {
+  background: #fff8e6;
+  border-left-color: var(--color-warning);
+  color: #9a6700;
+}
+
+.alert-danger {
+  background: #ffeaea;
+  border-left-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.alert-success {
+  background: #e8f5e9;
+  border-left-color: var(--color-success);
+  color: #2e7d32;
+}
+
+/* ===== Badge/Tag Styles ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.badge-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-warning {
+  background: #fff8e6;
+  color: #9a6700;
+}
+
+.badge-error {
+  background: #ffeaea;
+  color: var(--color-error);
+}
+
+.badge-info {
+  background: #e3f2fd;
+  color: var(--color-info);
+}
+
+/* ===== Responsive Utilities ===== */
+@media (max-width: 768px) {
+  :root {
+    --text-2xl: 1.375rem;
+    --text-3xl: 1.625rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+  }
+  
+  .card-body {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --text-base: 0.9375rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --spacing-md: 1.25rem;
+  }
+}
