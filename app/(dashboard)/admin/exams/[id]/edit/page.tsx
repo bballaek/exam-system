@@ -116,7 +116,7 @@ export default function ExamEditorPage() {
       type: question.type as QuestionType,
       points: question.points,
       options: question.options.map((o) => ({ value: o })),
-      correctAnswerIndex: question.options.indexOf(question.correctAnswers[0]),
+      correctAnswerIndex: Math.max(0, question.options.indexOf(question.correctAnswers[0])),
       shortAnswer: question.type === "SHORT" ? question.correctAnswers[0] || "" : "",
       subQuestions:
         question.type === "CODEMSA"
@@ -145,7 +145,10 @@ export default function ExamEditorPage() {
 
       if (data.type === "CHOICE") {
         options = data.options.map((o) => o.value).filter((v) => v.trim());
-        correctAnswers = [options[data.correctAnswerIndex] || options[0]];
+        const answerIndex = typeof data.correctAnswerIndex === 'string' 
+          ? parseInt(data.correctAnswerIndex, 10) 
+          : data.correctAnswerIndex;
+        correctAnswers = [options[answerIndex] || options[0]];
       } else if (data.type === "SHORT") {
         correctAnswers = [data.shortAnswer];
       } else if (data.type === "CODEMSA") {

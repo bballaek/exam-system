@@ -104,18 +104,18 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
           ) : data ? (
             <div className="space-y-6">
               {/* Summary Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-indigo-50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-indigo-600">{data.totalSubmissions}</p>
-                  <p className="text-sm text-gray-600">ผู้เข้าสอบ</p>
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
+                <div className="bg-indigo-50 rounded-lg p-2 md:p-4 text-center">
+                  <p className="text-lg md:text-2xl font-bold text-indigo-600">{data.totalSubmissions}</p>
+                  <p className="text-xs md:text-sm text-gray-600">ผู้เข้าสอบ</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-green-600">{data.avgScore}</p>
-                  <p className="text-sm text-gray-600">คะแนนเฉลี่ย</p>
+                <div className="bg-green-50 rounded-lg p-2 md:p-4 text-center">
+                  <p className="text-lg md:text-2xl font-bold text-green-600">{data.avgScore}</p>
+                  <p className="text-xs md:text-sm text-gray-600">คะแนนเฉลี่ย</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-600">{data.avgPercentage}%</p>
-                  <p className="text-sm text-gray-600">เฉลี่ย %</p>
+                <div className="bg-blue-50 rounded-lg p-2 md:p-4 text-center">
+                  <p className="text-lg md:text-2xl font-bold text-blue-600">{data.avgPercentage}%</p>
+                  <p className="text-xs md:text-sm text-gray-600">เฉลี่ย %</p>
                 </div>
               </div>
 
@@ -139,8 +139,8 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
                   </div>
 
                   {/* Question Statistics Table */}
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-12">ข้อ</th>

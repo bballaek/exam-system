@@ -115,7 +115,7 @@ export default function ExamCard({
         ) : (
           <div className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-400 rounded-lg text-sm">
             <Icon name="lock" size="sm" />
-            ปิดรับสมัคร
+            ปิด
           </div>
         )}
       </div>
