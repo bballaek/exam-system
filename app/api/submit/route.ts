@@ -72,7 +72,8 @@ export async function POST(request: NextRequest) {
       maxPoints: number;
     }[] = [];
 
-    examSet.questions.forEach((question, index) => {
+    type QuestionType = typeof examSet.questions[number];
+    examSet.questions.forEach((question: QuestionType, index: number) => {
       const userAnswer = userAnswers[index];
       const correctAnswers = question.correctAnswers;
       const points = question.points;
