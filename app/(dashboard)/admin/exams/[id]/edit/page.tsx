@@ -460,33 +460,42 @@ export default function ExamEditorPage() {
                       ตัวเลือก (เลือกคำตอบที่ถูกต้อง)
                     </label>
                     <div className="space-y-3">
-                      {optionFields.map((field, index) => (
-                        <div key={field.id} className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            {...register("correctAnswerIndex")}
-                            value={index}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                          />
-                          <span className="w-6 h-6 flex items-center justify-center bg-gray-100 text-gray-600 rounded text-sm font-medium">
-                            {["ก", "ข", "ค", "ง", "จ", "ฉ"][index]}
-                          </span>
-                          <input
-                            {...register(`options.${index}.value`)}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder={`ตัวเลือก ${["ก", "ข", "ค", "ง", "จ", "ฉ"][index]}`}
-                          />
-                          {optionFields.length > 2 && (
-                            <button
-                              type="button"
-                              onClick={() => removeOption(index)}
-                              className="p-2 text-gray-400 hover:text-red-500"
-                            >
-                              <Icon name="trash" size="sm" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                      {optionFields.map((field, index) => {
+                        const watchedIndex = watch("correctAnswerIndex");
+                        const isChecked = Number(watchedIndex) === index;
+                        return (
+                          <div key={field.id} className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="correctAnswerIndex"
+                              checked={isChecked}
+                              onChange={() => setValue("correctAnswerIndex", index)}
+                              className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                            />
+                            <span className={`w-6 h-6 flex items-center justify-center rounded text-sm font-medium ${
+                              isChecked ? "bg-indigo-100 text-indigo-600 ring-2 ring-indigo-500" : "bg-gray-100 text-gray-600"
+                            }`}>
+                              {["ก", "ข", "ค", "ง", "จ", "ฉ"][index]}
+                            </span>
+                            <input
+                              {...register(`options.${index}.value`)}
+                              className={`flex-1 px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                                isChecked ? "border-indigo-300 bg-indigo-50" : "border-gray-300"
+                              }`}
+                              placeholder={`ตัวเลือก ${["ก", "ข", "ค", "ง", "จ", "ฉ"][index]}`}
+                            />
+                            {optionFields.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => removeOption(index)}
+                                className="p-2 text-gray-400 hover:text-red-500"
+                              >
+                                <Icon name="trash" size="sm" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     {optionFields.length < 6 && (
                       <button
