@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
+import { useToast } from "@/components/Toast";
 
 // Types
 type QuestionType = "CHOICE" | "SHORT" | "CODEMSA";
@@ -81,6 +82,7 @@ export default function PublicExamPage() {
   const [userAnswers, setUserAnswers] = useState<(string | string[] | null)[]>([]);
   const [timeLeft, setTimeLeft] = useState<number | null>(null); // null = unlimited
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
   
   // Anti-cheat
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -128,7 +130,7 @@ export default function PublicExamPage() {
           const newCount = prev + 1;
           setShowWarning(true);
           if (newCount >= MAX_TAB_SWITCHES) {
-            alert(`คุณสลับหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            toast.showToast("error", `คุณสลับหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
             handleSubmit();
           }
           return newCount;
@@ -176,7 +178,7 @@ export default function PublicExamPage() {
   
   const handleStartExam = () => {
     if (!studentInfo.firstName.trim() || !studentInfo.lastName.trim() || !studentInfo.studentId.trim()) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      toast.showToast("warning", "กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
     sessionStorage.setItem("studentInfo", JSON.stringify(studentInfo));
@@ -218,7 +220,7 @@ export default function PublicExamPage() {
         throw new Error(result.error || "ไม่สามารถส่งคำตอบได้");
       }
     } catch (err) {
-      alert(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : "ไม่ทราบสาเหตุ"}`);
+      toast.showToast("error", `เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : "ไม่ทราบสาเหตุ"}`);
       setIsSubmitting(false);
     }
   }, [examId, studentInfo, userAnswers, shuffledQuestions, router, isSubmitting]);

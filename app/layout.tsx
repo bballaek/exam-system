@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sarabun } from "next/font/google";
 import "./globals.css";
+import { ToastProvider } from "@/components/Toast";
 
 const sarabun = Sarabun({
   weight: ["400", "500", "700"],
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body className={`${sarabun.variable} font-sans antialiased`}>
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

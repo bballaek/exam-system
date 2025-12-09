@@ -6,6 +6,7 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import ShareModal from "@/components/ShareModal";
 import QuestionAnalysis from "@/components/QuestionAnalysis";
+import { useToast } from "@/components/Toast";
 
 interface ExamSet {
   id: string;
@@ -47,6 +48,9 @@ export default function ExamManagementPage() {
   
   // Analytics modal state
   const [analyticsExamId, setAnalyticsExamId] = useState<string | null>(null);
+  
+  // Toast hook
+  const toast = useToast();
 
   // Fetch exam sets
   const fetchExamSets = useCallback(async () => {
@@ -71,7 +75,7 @@ export default function ExamManagementPage() {
   // Create new exam set
   const handleCreate = async () => {
     if (!newExamTitle.trim()) {
-      alert("กรุณากรอกชื่อชุดข้อสอบ");
+      toast.showToast("warning", "กรุณากรอกชื่อชุดข้อสอบ");
       return;
     }
 
@@ -94,11 +98,11 @@ export default function ExamManagementPage() {
         setNewExamTimeLimit(60);
         await fetchExamSets();
       } else {
-        alert("เกิดข้อผิดพลาดในการสร้างชุดข้อสอบ");
+        toast.showToast("error", "เกิดข้อผิดพลาดในการสร้างชุดข้อสอบ");
       }
     } catch (error) {
       console.error("Error creating exam set:", error);
-      alert("เกิดข้อผิดพลาด");
+      toast.showToast("error", "เกิดข้อผิดพลาด");
     } finally {
       setIsCreating(false);
     }
@@ -135,34 +139,15 @@ export default function ExamManagementPage() {
       if (response.ok) {
         setEditModalExam(null);
         await fetchExamSets();
-        alert("บันทึกสำเร็จ ✓");
+        toast.showToast("success", "บันทึกสำเร็จ");
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.showToast("error", "เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       console.error("Error saving edit:", error);
-      alert("เกิดข้อผิดพลาด");
+      toast.showToast("error", "เกิดข้อผิดพลาด");
     } finally {
       setIsSavingEdit(false);
-    }
-  };
-
-  // Toggle active status
-  const handleToggleActive = async (examId: string, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/exam-sets/${examId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (response.ok) {
-        setExamSets((prev) =>
-          prev.map((e) => (e.id === examId ? { ...e, isActive: !currentStatus } : e))
-        );
-      }
-    } catch (error) {
-      console.error("Error toggling status:", error);
     }
   };
 
@@ -179,12 +164,13 @@ export default function ExamManagementPage() {
 
       if (response.ok) {
         await fetchExamSets();
+        toast.showToast("success", "ลบชุดข้อสอบเรียบร้อย");
       } else {
-        alert("เกิดข้อผิดพลาดในการลบ");
+        toast.showToast("error", "เกิดข้อผิดพลาดในการลบ");
       }
     } catch (error) {
       console.error("Error deleting:", error);
-      alert("เกิดข้อผิดพลาด");
+      toast.showToast("error", "เกิดข้อผิดพลาด");
     }
   };
 
@@ -225,13 +211,13 @@ export default function ExamManagementPage() {
           )
         );
         setShareModalExam(null);
-        alert("บันทึกการตั้งค่าสำเร็จ ✓");
+        toast.showToast("success", "บันทึกการตั้งค่าสำเร็จ");
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.showToast("error", "เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("เกิดข้อผิดพลาด");
+      toast.showToast("error", "เกิดข้อผิดพลาด");
     }
   };
 

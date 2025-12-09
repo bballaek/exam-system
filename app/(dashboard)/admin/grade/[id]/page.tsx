@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import Icon from "@/components/Icon";
+import { useToast } from "@/components/Toast";
 
 interface Question {
   id: number;
@@ -54,6 +55,7 @@ export default function GradeSubmissionPage() {
   const [error, setError] = useState<string | null>(null);
   const [grades, setGrades] = useState<Record<string, number>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchSubmission = async () => {
@@ -104,13 +106,13 @@ export default function GradeSubmissionPage() {
 
       if (response.ok) {
         setHasChanges(false);
-        alert("บันทึกคะแนนเรียบร้อยแล้ว");
+        toast.showToast("success", "บันทึกคะแนนเรียบร้อยแล้ว");
         router.push("/admin/dashboard");
       } else {
         throw new Error("ไม่สามารถบันทึกได้");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      toast.showToast("error", err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setIsSaving(false);
     }

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Icon from "@/components/Icon";
 import { parseCSV, generateSampleCSV, ParsedQuestion } from "@/lib/csvParser";
+import { useToast } from "@/components/Toast";
 
 interface ImportQuestionsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function ImportQuestionsModal({
   const [errors, setErrors] = useState<{ row: number; message: string }[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [fileName, setFileName] = useState("");
+  const toast = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,16 +56,16 @@ export default function ImportQuestionsModal({
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message || "นำเข้าคำถามสำเร็จ");
+        toast.showToast("success", data.message || "นำเข้าคำถามสำเร็จ");
         onSuccess();
         handleClose();
       } else {
         const error = await response.json();
-        alert(`เกิดข้อผิดพลาด: ${error.error}`);
+        toast.showToast("error", `เกิดข้อผิดพลาด: ${error.error}`);
       }
     } catch (error) {
       console.error("Import error:", error);
-      alert("เกิดข้อผิดพลาดในการนำเข้า");
+      toast.showToast("error", "เกิดข้อผิดพลาดในการนำเข้า");
     } finally {
       setIsImporting(false);
     }

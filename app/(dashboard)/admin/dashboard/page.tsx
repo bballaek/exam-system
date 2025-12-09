@@ -1,9 +1,11 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import Icon from "@/components/Icon";
 import { useExamSets } from "@/lib/hooks/useExamSets";
 import { useSubmissions } from "@/lib/hooks/useSubmissions";
+import { useToast } from "@/components/Toast";
 import {
   StatCard,
   ScoreDistributionChart,
@@ -26,6 +28,8 @@ export default function AdminDashboardPage() {
   const [sortBy, setSortBy] = useState<"name" | "score" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const toast = useToast();
 
   // SWR hooks for data fetching with caching
   const { examSets, isLoading: isLoadingExams, mutate: mutateExams } = useExamSets();
@@ -200,7 +204,7 @@ export default function AdminDashboardPage() {
 
   const handleExportCSV = () => {
     if (filteredSubmissions.length === 0) {
-      alert("ไม่มีข้อมูลให้ส่งออก");
+      toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
       return;
     }
 
