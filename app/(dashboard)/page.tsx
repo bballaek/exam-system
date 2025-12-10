@@ -66,9 +66,9 @@ export default function DashboardPage() {
   const activeCount = examSets.filter((e) => e.isActive).length;
 
   return (
-    <>
-      <div className="p-4 md:p-8">
-        {/* Welcome Message */}
+    <div className="min-h-screen bg-surface p-4 md:p-8">
+      {/* Welcome Message */}
+      <div className="max-w-7xl mx-auto">
         <div className="mb-6 md:mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
             ยินดีต้อนรับ, นักเรียน
@@ -80,25 +80,60 @@ export default function DashboardPage() {
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-2 mb-6">
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value as typeof selectedFilter)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="all">ทั้งหมด</option>
-            <option value="active">เปิดสอบ</option>
-            <option value="closed">ปิดสอบ</option>
-          </select>
+          <div className="inline-flex items-center rounded-lg border border-border bg-card p-1">
+            <button
+              onClick={() => setSelectedFilter("all")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                selectedFilter === "all"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-muted"
+              }`}
+            >
+              <Icon name="list" size="xs" />
+              ทั้งหมด
+              <span className={`ml-1 px-1.5 py-0.5 rounded text-xs ${
+                selectedFilter === "all" ? "bg-white/20" : "bg-muted"
+              }`}>{examSets.length}</span>
+            </button>
+            <button
+              onClick={() => setSelectedFilter("active")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                selectedFilter === "active"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-muted"
+              }`}
+            >
+              <Icon name="check-circle" size="xs" />
+              เปิดสอบ
+              <span className={`ml-1 px-1.5 py-0.5 rounded text-xs ${
+                selectedFilter === "active" ? "bg-white/20" : "bg-green-100 text-green-700"
+              }`}>{activeCount}</span>
+            </button>
+            <button
+              onClick={() => setSelectedFilter("closed")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                selectedFilter === "closed"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-muted"
+              }`}
+            >
+              <Icon name="lock" size="xs" />
+              ปิดสอบ
+              <span className={`ml-1 px-1.5 py-0.5 rounded text-xs ${
+                selectedFilter === "closed" ? "bg-white/20" : "bg-muted"
+              }`}>{examSets.length - activeCount}</span>
+            </button>
+          </div>
         </div>
 
         {/* Exam Cards Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Icon name="spinner" size="lg" className="text-indigo-600" />
+            <Icon name="spinner" size="lg" className="text-gray-600" />
             <span className="ml-3 text-gray-500">กำลังโหลดข้อมูล...</span>
           </div>
         ) : filteredExamSets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-border bg-card">
             <Icon name="folder" size="xl" className="text-gray-400 mb-4" />
             <p className="text-gray-500">ยังไม่มีข้อสอบในระบบ</p>
           </div>
@@ -121,6 +156,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

@@ -14,7 +14,12 @@ import {
   DashboardFilters,
   DashboardSkeleton,
   EmptyState,
+  StudentGrouping,
+  ResearchStatistics,
+  BoxPlotChart,
+  ClassroomComparisonChart,
 } from "@/components/dashboard";
+import { calculateAllStatistics, groupStudentsByPercentile } from "@/lib/statistics";
 import type { Submission } from "@/components/dashboard/SubmissionsTable";
 import type { ExamSet } from "@/components/dashboard/DashboardFilters";
 
@@ -153,12 +158,63 @@ export default function AdminDashboardPage() {
     ];
   }, [filteredSubmissions]);
 
+  // Research statistics
+  const researchStats = useMemo(() => {
+    const percentages = filteredSubmissions.map((s) => s.percentage);
+    return calculateAllStatistics(percentages);
+  }, [filteredSubmissions]);
+
+  // Student grouping by percentile
+  const studentGroups = useMemo(() => {
+    return groupStudentsByPercentile(
+      filteredSubmissions.map((s) => ({
+        id: s.id,
+        studentName: s.studentName,
+        percentage: s.percentage,
+        score: s.score,
+      }))
+    );
+  }, [filteredSubmissions]);
+
+  // Box Plot data
+  const boxPlotData = useMemo(() => ({
+    min: researchStats.min,
+    q1: researchStats.q1,
+    median: researchStats.median,
+    q3: researchStats.q3,
+    max: researchStats.max,
+    mean: researchStats.mean,
+  }), [researchStats]);
+
+  // Classroom comparison data
+  const classroomStats = useMemo(() => {
+    const classroomMap = new Map<string, { scores: number[]; count: number }>();
+    
+    submissions.forEach((s) => {
+      const room = s.classroom || "ไม่ระบุ";
+      if (!classroomMap.has(room)) {
+        classroomMap.set(room, { scores: [], count: 0 });
+      }
+      const data = classroomMap.get(room)!;
+      data.scores.push(s.percentage);
+      data.count++;
+    });
+
+    return Array.from(classroomMap.entries()).map(([classroom, data]) => ({
+      classroom,
+      avgScore: data.scores.reduce((a, b) => a + b, 0) / data.scores.length,
+      count: data.count,
+      passRate: (data.scores.filter((s) => s >= 60).length / data.scores.length) * 100,
+    })).sort((a, b) => b.avgScore - a.avgScore);
+  }, [submissions]);
+
   // Pagination
   const totalPages = Math.ceil(filteredSubmissions.length / ROWS_PER_PAGE);
   const paginatedSubmissions = useMemo(() => {
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     return filteredSubmissions.slice(start, start + ROWS_PER_PAGE);
   }, [filteredSubmissions, currentPage]);
+
 
   // Reset page when filter changes
   useEffect(() => {
@@ -208,28 +264,37 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    const headers = ["ลำดับ", "เลขที่", "ชื่อ-นามสกุล", "ห้อง", "รหัสนักเรียน", "ชุดข้อสอบ", "คะแนน", "เปอร์เซ็นต์", "วันที่"];
-    const rows = filteredSubmissions.map((sub, index) => [
-      index + 1,
-      sub.studentNumber || "-",
-      sub.studentName,
-      sub.classroom || "-",
-      sub.studentId,
-      sub.examTitle,
-      `${sub.score}/${sub.totalPoints}`,
-      `${sub.percentage}%`,
-      new Date(sub.submittedAt).toLocaleString("th-TH"),
-    ]);
+    // Dynamic import to avoid SSR issues
+    import("@/lib/exportData").then(({ exportSubmissionsToCSV }) => {
+      exportSubmissionsToCSV(filteredSubmissions, "exam_results");
+      toast.showToast("success", "ส่งออกข้อมูลเรียบร้อย");
+    });
+  };
 
-    const BOM = "\uFEFF";
-    const csvContent = BOM + [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+  const handleExportStatistics = () => {
+    if (filteredSubmissions.length === 0) {
+      toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
+      return;
+    }
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `dashboard_export_${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+    const examTitle = selectedExam?.title || "ทุกชุดข้อสอบ";
+    import("@/lib/exportData").then(({ exportStatisticsToCSV }) => {
+      exportStatisticsToCSV(researchStats, examTitle, "statistics");
+      toast.showToast("success", "ส่งออกสถิติเรียบร้อย");
+    });
+  };
+
+  const handleExportResearch = () => {
+    if (filteredSubmissions.length === 0) {
+      toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
+      return;
+    }
+
+    const examTitle = selectedExam?.title || "ทุกชุดข้อสอบ";
+    import("@/lib/exportData").then(({ exportResearchReport }) => {
+      exportResearchReport(filteredSubmissions, researchStats, examTitle, "research_report");
+      toast.showToast("success", "ส่งออกรายงานวิจัยเรียบร้อย");
+    });
   };
 
   const handlePrint = () => {
@@ -239,7 +304,7 @@ export default function AdminDashboardPage() {
   // Loading state
   if (isLoading && submissions.length === 0) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="min-h-screen bg-surface p-4 md:p-6">
         <DashboardSkeleton />
       </div>
     );
@@ -248,7 +313,7 @@ export default function AdminDashboardPage() {
   // Empty state
   if (!isLoading && examSets.length === 0) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="min-h-screen bg-surface p-4 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
@@ -279,7 +344,7 @@ export default function AdminDashboardPage() {
   const selectedExam = selectedExamSetId ? examSets.find((e) => e.id === selectedExamSetId) : null;
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="min-h-screen bg-surface p-4 md:p-6">
       <div className="space-y-6 print:p-2">
         {/* Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -306,29 +371,84 @@ export default function AdminDashboardPage() {
           />
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard icon="users" label="จำนวนผู้สอบ" value={stats.total} color="indigo" />
-          <StatCard icon="check-circle" label="อัตราผ่าน" value={`${stats.passRate}%`} color="green" />
-          <StatCard icon="chart" label="คะแนนเฉลี่ย" value={`${stats.avgScore}%`} color="blue" />
-          <StatCard icon="star" label="คะแนนสูงสุด" value={`${stats.maxScore}%`} color="yellow" />
-          <StatCard icon="minus" label="คะแนนต่ำสุด" value={`${stats.minScore}%`} color="red" />
+        {/* Lead Metrics Cards - Top Section */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              icon="users" 
+              label="จำนวนผู้สอบ" 
+              value={stats.total} 
+              color="indigo" 
+            />
+            <StatCard 
+              icon="check-circle" 
+              label="อัตราผ่าน" 
+              value={`${stats.passRate}%`} 
+              color="green" 
+            />
+            <StatCard 
+              icon="star" 
+              label="คะแนนสูงสุด" 
+              value={`${stats.maxScore}%`} 
+              color="yellow" 
+            />
+            <StatCard 
+              icon="chart" 
+              label="คะแนนเฉลี่ย" 
+              value={`${stats.avgScore}%`} 
+              color="blue" 
+            />
+          </div>
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
           <ScoreDistributionChart data={scoreDistribution} />
           <PassFailPieChart data={passFailData} />
         </div>
 
+        {/* Research Analytics Section - Collapsible */}
+        <details className="group print:hidden" open>
+          <summary className="flex items-center justify-between cursor-pointer rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors list-none">
+            <div className="flex items-center gap-3">
+              <Icon name="chart" size="md" className="text-indigo-600" />
+              <div>
+                <h3 className="font-semibold text-gray-800">การวิเคราะห์เชิงลึก</h3>
+                <p className="text-xs text-gray-500">สถิติ, การจัดกลุ่มนักเรียน, Box Plot, เปรียบเทียบห้อง</p>
+              </div>
+            </div>
+            <Icon name="chevron-down" size="sm" className="text-gray-400 transition-transform group-open:rotate-180" />
+          </summary>
+          
+          <div className="mt-4 space-y-6">
+            {/* Research Statistics & Student Grouping */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ResearchStatistics 
+                statistics={researchStats} 
+                isLoading={isLoading}
+                onExportCSV={handleExportCSV}
+                onExportStatistics={handleExportStatistics}
+                onExportResearch={handleExportResearch}
+              />
+              <StudentGrouping groups={studentGroups} isLoading={isLoading} />
+            </div>
+
+            {/* Box Plot & Classroom Comparison */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BoxPlotChart data={boxPlotData} />
+              <ClassroomComparisonChart data={classroomStats} overallAvg={stats.avgScore} />
+            </div>
+          </div>
+        </details>
+
         {/* Exam Management Quick Actions */}
         {selectedExam && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between print:hidden">
+          <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between print:hidden">
             <div className="flex items-center gap-3">
-              <Icon name="settings" size="md" className="text-amber-600" />
+              <Icon name="settings" size="md" className="text-indigo-600" />
               <div>
-                <p className="font-medium text-amber-800">{selectedExam.title}</p>
-                <p className="text-sm text-amber-600">
+                <p className="font-medium text-gray-800">{selectedExam.title}</p>
+                <p className="text-sm text-gray-600">
                   สถานะ: {selectedExam.isActive ? "🟢 เปิดรับสอบ" : "🔴 ปิดรับสอบ"}
                 </p>
               </div>
@@ -359,6 +479,12 @@ export default function AdminDashboardPage() {
           onExportCSV={handleExportCSV}
           onPrint={handlePrint}
           isLoading={isLoadingSubmissions}
+          classrooms={classrooms}
+          selectedClassroom={selectedClassroom}
+          onClassroomChange={setSelectedClassroom}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={(by, order) => { setSortBy(by); setSortOrder(order); }}
         />
       </div>
     </div>

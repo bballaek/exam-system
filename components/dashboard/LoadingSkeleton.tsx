@@ -2,19 +2,20 @@
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center gap-3">
-      <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
-      <div className="flex-1">
-        <div className="h-6 w-16 bg-gray-200 rounded animate-pulse mb-1" />
-        <div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
+    <div className="flex-1 min-w-0 space-y-4">
+      <div className="flex items-center gap-1.5">
+        <div className="h-[18px] w-[18px] rounded bg-gray-200 animate-pulse" />
+        <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
       </div>
+      <div className="h-10 w-20 bg-gray-200 rounded animate-pulse" />
+      <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
     </div>
   );
 }
 
 export function ChartSkeleton({ className = "" }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className={`rounded-xl border border-border bg-card p-4 ${className}`}>
       <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-4" />
       <div className="h-64 bg-gray-100 rounded animate-pulse flex items-center justify-center">
         <svg className="w-12 h-12 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
@@ -27,7 +28,7 @@ export function ChartSkeleton({ className = "" }: { className?: string }) {
 
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
         <div className="flex gap-2">
@@ -80,10 +81,12 @@ export function DashboardSkeleton() {
       </div>
 
       {/* Stats skeleton */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <StatCardSkeleton key={i} />
-        ))}
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
 
       {/* Charts skeleton */}
@@ -110,7 +113,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+    <div className="rounded-xl border border-border bg-card p-12 text-center">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           {icon === "folder" && (

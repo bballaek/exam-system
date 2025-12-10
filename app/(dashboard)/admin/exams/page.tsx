@@ -243,7 +243,7 @@ export default function ExamManagementPage() {
         </div>
 
         {/* Exam List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center gap-3 py-12">
               <Icon name="spinner" size="lg" className="text-indigo-600" />
@@ -386,7 +386,7 @@ export default function ExamManagementPage() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowCreateModal(false)}
           />
-          <div className="relative bg-white rounded-lg shadow-md w-full max-w-md p-6">
+          <div className="relative rounded-xl border border-border bg-card w-full max-w-md p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
               สร้างชุดข้อสอบใหม่
             </h2>
@@ -400,7 +400,7 @@ export default function ExamManagementPage() {
                   type="text"
                   value={newExamTitle}
                   onChange={(e) => setNewExamTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="เช่น สอบกลางภาค 1/2568"
                   autoFocus
                 />
@@ -413,7 +413,7 @@ export default function ExamManagementPage() {
                   type="text"
                   value={newExamSubject}
                   onChange={(e) => setNewExamSubject(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="เช่น คณิตศาสตร์"
                 />
               </div>
@@ -448,7 +448,7 @@ export default function ExamManagementPage() {
               <button
                 onClick={handleCreate}
                 disabled={isCreating || !newExamTitle.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? (
                   <>
@@ -474,7 +474,7 @@ export default function ExamManagementPage() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setEditModalExam(null)}
           />
-          <div className="relative bg-white rounded-lg shadow-md w-full max-w-md p-6">
+          <div className="relative rounded-xl border border-border bg-card w-full max-w-md p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
               <Icon name="settings" size="sm" className="inline mr-2 text-gray-600" />
               ตั้งค่าข้อสอบ
@@ -489,7 +489,7 @@ export default function ExamManagementPage() {
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div>
@@ -500,7 +500,7 @@ export default function ExamManagementPage() {
                   type="text"
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="เช่น คณิตศาสตร์"
                 />
               </div>
@@ -515,7 +515,7 @@ export default function ExamManagementPage() {
                     max={300}
                     value={editTimeLimit || ""}
                     onChange={(e) => setEditTimeLimit(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-24 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
+                    className="w-24 px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
                     placeholder="60"
                   />
                   <span className="text-sm text-gray-500">
@@ -526,7 +526,7 @@ export default function ExamManagementPage() {
               </div>
               
               {/* Shuffle Questions Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
                 <div>
                   <p className="text-sm font-medium text-gray-700">สลับลำดับข้อสอบ</p>
                   <p className="text-xs text-gray-500">ลำดับข้อสอบจะสุ่มใหม่สำหรับนักเรียนแต่ละคน</p>
@@ -547,7 +547,7 @@ export default function ExamManagementPage() {
               </div>
 
               {/* Active Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
                 <div>
                   <p className="text-sm font-medium text-gray-700">เปิดใช้งานข้อสอบ</p>
                   <p className="text-xs text-gray-500">นักเรียนจะเห็นข้อสอบนี้เมื่อเปิดใช้งาน</p>
@@ -578,7 +578,7 @@ export default function ExamManagementPage() {
               <button
                 onClick={handleSaveEdit}
                 disabled={isSavingEdit || !editTitle.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingEdit ? (
                   <>

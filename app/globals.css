@@ -171,6 +171,7 @@
   /* ============================================
      🔘 BORDER RADIUS
      ============================================ */
+  --radius: .625rem;
   --radius-sm: 5px;
   --radius-md: 10px;
   --radius-lg: 15px;
@@ -215,6 +216,31 @@
   --icon-md: 1.5rem;
   --icon-lg: 2rem;
   --icon-xl: 3rem;
+
+  /* ============================================
+     🎨 UI Theme Variables (Clean & Minimal)
+     ============================================ */
+  --border: #e5e5e5;
+  --ring: #a1a1a1;
+  --chart-1: #f05100;
+  --chart-2: #009588;
+  --chart-3: #104e64;
+  --chart-4: #fcbb00;
+  --chart-5: #f99c00;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a1a1a1;
+  
+  /* Background colors - Clean white-gray */
+  --bg-card: #ffffff;
+  --bg-surface: #FFF;
+  --bg-muted: #f5f5f5;
+  --bg-info: #3498db;
 }
 
 /* ===== Tailwind Theme Integration ===== */
@@ -227,9 +253,52 @@
   --color-secondary: var(--color-secondary);
 }
 
+/* ============================================
+   🎨 Utility Classes
+   ============================================ */
+
+.border {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.divide-border > :not([hidden]) ~ :not([hidden]) {
+  --tw-divide-opacity: 1;
+  border-color: var(--border) !important;
+}
+
+.rounded-xl {
+  border-radius: var(--radius);
+}
+
+.rounded-lg {
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* Text colors using CSS variables */
+.text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.bg-card {
+  background-color: var(--bg-card);
+}
+
+.bg-surface {
+  background-color: var(--bg-surface);
+}
+
+.bg-muted {
+  background-color: var(--bg-muted);
+}
+
 /* ===== Base Styles ===== */
 body {
-  background: var(--color-bg);
+  background: var(--bg-surface);
   color: var(--color-text-light);
   font-family: var(--font-sarabun);
   font-size: var(--text-base);
@@ -315,8 +384,8 @@ body {
 /* ===== Card Styles ===== */
 .card {
   background: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }

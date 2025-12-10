@@ -9,7 +9,7 @@ import Icon from "@/components/Icon";
 import ImportQuestionsModal from "@/components/ImportQuestionsModal";
 
 // Types
-type QuestionType = "CHOICE" | "SHORT" | "CODEMSA";
+type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE";
 
 interface Question {
   id: number;
@@ -29,6 +29,11 @@ interface ExamSet {
   subject: string | null;
   isActive: boolean;
   questions: Question[];
+  // Scheduling fields
+  scheduledStart?: string | null;
+  scheduledEnd?: string | null;
+  timeLimitMinutes?: number | null;
+  shuffleQuestions?: boolean;
 }
 
 interface QuestionFormData {
@@ -38,6 +43,7 @@ interface QuestionFormData {
   options: { value: string }[];
   correctAnswerIndex: number; // For CHOICE
   shortAnswer: string; // For SHORT
+  trueFalseAnswer: boolean; // For TRUE_FALSE
   subQuestions: { question: string; answer: string }[]; // For CODEMSA
 }
 
@@ -54,6 +60,14 @@ export default function ExamEditorPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Scheduling form state
+  const [scheduledStart, setScheduledStart] = useState("");
+  const [scheduledEnd, setScheduledEnd] = useState("");
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Form setup
   const { register, handleSubmit, watch, setValue, reset, control } = useForm<QuestionFormData>({
@@ -64,6 +78,7 @@ export default function ExamEditorPage() {
       options: [{ value: "" }, { value: "" }, { value: "" }, { value: "" }],
       correctAnswerIndex: 0,
       shortAnswer: "",
+      trueFalseAnswer: true,
       subQuestions: [],
     },
   });
@@ -103,6 +118,41 @@ export default function ExamEditorPage() {
     fetchExamSet();
   }, [fetchExamSet]);
 
+  // Load scheduling data when examSet is fetched
+  useEffect(() => {
+    if (examSet) {
+      setScheduledStart(examSet.scheduledStart ? examSet.scheduledStart.slice(0, 16) : "");
+      setScheduledEnd(examSet.scheduledEnd ? examSet.scheduledEnd.slice(0, 16) : "");
+      setTimeLimitMinutes(examSet.timeLimitMinutes || null);
+      setShuffleQuestions(examSet.shuffleQuestions || false);
+    }
+  }, [examSet]);
+
+  // Save scheduling settings
+  const saveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const response = await fetch(`/api/exam-sets/${examSetId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduledStart: scheduledStart ? new Date(scheduledStart).toISOString() : null,
+          scheduledEnd: scheduledEnd ? new Date(scheduledEnd).toISOString() : null,
+          timeLimitMinutes: timeLimitMinutes || null,
+          shuffleQuestions,
+        }),
+      });
+      if (response.ok) {
+        setShowSettingsModal(false);
+        fetchExamSet();
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   // Load question into form when selected
   useEffect(() => {
     if (!examSet || !selectedQuestionId) return;
@@ -118,6 +168,7 @@ export default function ExamEditorPage() {
       options: question.options.map((o) => ({ value: o })),
       correctAnswerIndex: Math.max(0, question.options.indexOf(question.correctAnswers[0])),
       shortAnswer: question.type === "SHORT" ? question.correctAnswers[0] || "" : "",
+      trueFalseAnswer: question.type === "TRUE_FALSE" ? question.correctAnswers[0] === "TRUE" : true,
       subQuestions:
         question.type === "CODEMSA"
           ? question.subQuestions.map((sq, i) => ({
@@ -151,6 +202,8 @@ export default function ExamEditorPage() {
         correctAnswers = [options[answerIndex] || options[0]];
       } else if (data.type === "SHORT") {
         correctAnswers = [data.shortAnswer];
+      } else if (data.type === "TRUE_FALSE") {
+        correctAnswers = [data.trueFalseAnswer ? "TRUE" : "FALSE"];
       } else if (data.type === "CODEMSA") {
         subQuestions = data.subQuestions.map((sq) => sq.question);
         correctAnswers = data.subQuestions.map((sq) => sq.answer);
@@ -252,7 +305,7 @@ export default function ExamEditorPage() {
           <Icon name="error" size="xl" className="text-red-500" />
           <p className="text-gray-600">ไม่พบชุดข้อสอบ</p>
           <Link href="/admin/dashboard" className="text-indigo-600 hover:underline">
-            กลับหน้า Dashboard
+            Back
           </Link>
         </div>
       </>
@@ -261,7 +314,7 @@ export default function ExamEditorPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-64px)] relative">
+      <div className="flex h-[calc(100vh-60px)] lg:h-screen relative">
         {/* Mobile Overlay */}
         {showMobileSidebar && (
           <div
@@ -273,7 +326,7 @@ export default function ExamEditorPage() {
         {/* Left Sidebar - Question List */}
         <div className={`
           fixed md:relative inset-y-0 left-0 z-50 md:z-auto
-          w-72 bg-white border-r border-gray-200 flex flex-col
+          w-72 bg-gray-50 border-r border-gray-200 flex flex-col h-full
           transform transition-transform duration-300 ease-in-out
           ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
@@ -281,11 +334,11 @@ export default function ExamEditorPage() {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <Link
-                href="/admin/dashboard"
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600"
+                href="/admin/exams"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all"
               >
                 <Icon name="arrow-left" size="sm" />
-                กลับ
+                Back
               </Link>
               {/* Close button for mobile */}
               <button
@@ -310,13 +363,22 @@ export default function ExamEditorPage() {
               <Icon name="plus" size="sm" />
               เพิ่มคำถาม
             </button>
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-            >
-              <Icon name="upload" size="sm" />
-              Import CSV
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                <Icon name="upload" size="sm" />
+                Import
+              </button>
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                <Icon name="settings" size="sm" />
+                ตั้งค่า
+              </button>
+            </div>
           </div>
 
           {/* Question List */}
@@ -333,10 +395,10 @@ export default function ExamEditorPage() {
                     setSelectedQuestionId(question.id);
                     setShowMobileSidebar(false); // Close sidebar on mobile when selecting
                   }}
-                  className={`p-3 border-b border-gray-100 cursor-pointer transition-colors ${
+                  className={`p-3 border-b border-gray-50 cursor-pointer transition-all duration-200 ${
                     selectedQuestionId === question.id
-                      ? "bg-indigo-50 border-l-4 border-l-indigo-600"
-                      : "hover:bg-gray-50"
+                      ? "bg-indigo-50/50 border border-indigo-200 shadow-sm"
+                      : "hover:bg-gray-50 border-transparent"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -373,7 +435,7 @@ export default function ExamEditorPage() {
         </div>
 
         {/* Right Panel - Question Editor */}
-        <div className="flex-1 bg-gray-50 overflow-y-auto">
+        <div className="flex-1 bg-surface overflow-y-auto h-[calc(100vh-56px)] mt-10">
           {selectedQuestionId ? (
             <form onSubmit={handleSubmit(onSave)} className="p-4 md:p-6 max-w-3xl mx-auto">
               {/* Mobile Header with Menu Button */}
@@ -383,7 +445,7 @@ export default function ExamEditorPage() {
                   <button
                     type="button"
                     onClick={() => setShowMobileSidebar(true)}
-                    className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                    className="md:hidden p-2 -ml-2 text-gray-200 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
                   >
                     <Icon name="menu" size="md" />
                   </button>
@@ -447,6 +509,7 @@ export default function ExamEditorPage() {
                       className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="CHOICE">ปรนัย (CHOICE)</option>
+                      <option value="TRUE_FALSE">ถูก/ผิด (TRUE_FALSE)</option>
                       <option value="SHORT">เติมคำตอบ (SHORT)</option>
                       <option value="CODEMSA">โค้ด (CODEMSA)</option>
                     </select>
@@ -523,6 +586,40 @@ export default function ExamEditorPage() {
                   </div>
                 )}
 
+                {watchType === "TRUE_FALSE" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      คำตอบที่ถูกต้อง
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setValue("trueFalseAnswer", true)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          watch("trueFalseAnswer") === true
+                            ? "bg-green-500 text-white ring-2 ring-green-300"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <Icon name="check-circle" size="sm" />
+                        ถูก (TRUE)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue("trueFalseAnswer", false)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          watch("trueFalseAnswer") === false
+                            ? "bg-red-500 text-white ring-2 ring-red-300"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <Icon name="close" size="sm" />
+                        ผิด (FALSE)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {watchType === "CODEMSA" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -593,6 +690,116 @@ export default function ExamEditorPage() {
         examSetId={examSetId}
         onSuccess={fetchExamSet}
       />
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Icon name="settings" size="sm" className="text-gray-600" />
+                ตั้งค่าข้อสอบ
+              </h2>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <Icon name="close" size="sm" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-5">
+              {/* Time Limit */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ⏱️ จำกัดเวลาทำข้อสอบ (นาที)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={timeLimitMinutes || ""}
+                  onChange={(e) => setTimeLimitMinutes(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="ไม่จำกัด"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Scheduled Start */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  📅 เวลาเปิดสอบ
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledStart}
+                  onChange={(e) => setScheduledStart(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Scheduled End */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  📅 เวลาปิดสอบ
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledEnd}
+                  onChange={(e) => setScheduledEnd(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Shuffle Questions */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">🔀 สลับลำดับข้อสอบ</p>
+                  <p className="text-xs text-gray-500 mt-0.5">ข้อสอบแต่ละคนจะไม่เหมือนกัน</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShuffleQuestions(!shuffleQuestions)}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${
+                    shuffleQuestions ? "bg-indigo-600" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      shuffleQuestions ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={saveSettings}
+                disabled={isSavingSettings}
+                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSavingSettings ? (
+                  <>
+                    <Icon name="spinner" size="sm" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  "บันทึก"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

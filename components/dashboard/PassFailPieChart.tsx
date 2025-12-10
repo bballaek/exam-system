@@ -21,7 +21,7 @@ const CHART_COLORS = {
 
 export default function PassFailPieChart({ data }: PassFailPieChartProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
         <Icon name="chart" size="sm" className="text-green-600" />
         สัดส่วนผ่าน/ไม่ผ่าน
@@ -40,11 +40,19 @@ export default function PassFailPieChart({ data }: PassFailPieChartProps) {
                 `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
               }
             >
-              <Cell fill={CHART_COLORS.pass} />
-              <Cell fill={CHART_COLORS.fail} />
+              <Cell fill="#22c55e" />
+              <Cell fill="#ef4444" />
             </Pie>
-            <Legend />
-            <Tooltip />
+            <Legend 
+              wrapperStyle={{ fontSize: "12px" }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: "white", 
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px"
+              }} 
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -19,7 +19,7 @@ const CHART_COLOR = "#6366f1";
 
 export default function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
   return (
-    <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
         <Icon name="chart" size="sm" className="text-indigo-600" />
         การกระจายคะแนน
@@ -28,10 +28,23 @@ export default function ScoreDistributionChart({ data }: ScoreDistributionChartP
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="range" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey="count" fill={CHART_COLOR} radius={[4, 4, 0, 0]} />
+            <XAxis 
+              dataKey="range" 
+              tick={{ fontSize: 10, fill: "#6b7280" }} 
+              axisLine={{ stroke: "#e5e7eb" }}
+            />
+            <YAxis 
+              tick={{ fontSize: 12, fill: "#6b7280" }} 
+              axisLine={{ stroke: "#e5e7eb" }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: "white", 
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px"
+              }} 
+            />
+            <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

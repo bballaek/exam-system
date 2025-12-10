@@ -40,19 +40,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-lg mb-4">
-            <Icon name="bookmark" size="lg" className="text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-xl mb-4 shadow-sm border border-gray-100">
+            <img src="/logo.svg" alt="MasterExam" className="w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Classroom Master</h1>
+          <h1 className="text-2xl font-bold text-gray-900">MasterExam</h1>
           <p className="text-gray-500 mt-1">เข้าสู่ระบบสำหรับผู้ดูแล</p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
+        {/* Login Form - Updated styling */}
+        <div className="rounded-xl border border-border bg-card p-8">
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Error Message */}
             {error && (
@@ -71,7 +71,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full px-4 py-3 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                 placeholder="admin@example.com"
                 required
                 autoFocus
@@ -87,17 +87,17 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full px-4 py-3 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                 placeholder="••••••••"
                 required
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Updated styling */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -116,9 +116,10 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-gray-400 text-xs mt-6">
-          © 2025 Classroom Master • Admin Portal
+          © 2025 MasterExam • Admin Portal
         </p>
       </div>
     </div>
   );
 }
+

@@ -58,16 +58,17 @@ export default function StudentInfoPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 min-h-screen bg-surface">
         <div className="max-w-md mx-auto">
-          {/* Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Card - Updated styling */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
             {/* Header */}
-            <div className="border-b border-gray-100 bg-gray-50 px-6 py-5 text-center">
+            <div className="border-b border-border bg-muted px-6 py-5 text-center">
               <h1 className="flex items-center justify-center gap-2 text-lg font-bold text-gray-900">
                 <Icon name="user" size="md" className="text-indigo-600" />
                 ข้อมูลผู้สอบ
               </h1>
+              <p className="text-sm text-gray-500 mt-1">กรอกข้อมูลก่อนเริ่มทำข้อสอบ</p>
             </div>
 
             {/* Content */}
@@ -89,20 +90,21 @@ export default function StudentInfoPage() {
                       value={formData[field.id as keyof StudentData]}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                      className="w-full px-4 py-3 border border-border rounded-lg text-gray-900 bg-card focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-gray-400"
+                      placeholder={`กรอก${field.label}`}
                     />
                   </div>
                 ))}
 
-                {/* Submit Button */}
+                {/* Submit Button - Updated styling */}
                 <button
                   type="submit"
                   id="submitBtn"
                   disabled={isSubmitting}
-                  className={`w-full mt-4 py-4 rounded-xl flex items-center justify-center gap-2 text-base font-bold transition-all ${
+                  className={`w-full mt-4 py-4 rounded-lg flex items-center justify-center gap-2 text-base font-bold transition-all ${
                     isSubmitting
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700"
+                      : "bg-gray-900 text-white hover:bg-gray-800"
                   }`}
                 >
                   {isSubmitting ? (
@@ -125,3 +127,4 @@ export default function StudentInfoPage() {
     </DashboardLayout>
   );
 }
+

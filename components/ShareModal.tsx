@@ -98,27 +98,25 @@ export default function ShareModal({
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      {/* Modal - Updated styling */}
+      <div className="relative rounded-xl border border-border bg-card w-full max-w-md overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Icon name="share" size="md" />
-              </div>
-              <div>
-                <h2 className="font-bold text-lg">แชร์ข้อสอบ</h2>
-                <p className="text-sm text-white/80 truncate max-w-[200px]">{examTitle}</p>
-              </div>
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <Icon name="share" size="md" className="text-gray-600" />
             </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <Icon name="close" size="sm" />
-            </button>
+            <div>
+              <h2 className="font-bold text-lg text-gray-900">แชร์ข้อสอบ</h2>
+              <p className="text-sm text-gray-500 truncate max-w-[200px]">{examTitle}</p>
+            </div>
           </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
+            <Icon name="close" size="sm" className="text-gray-500" />
+          </button>
         </div>
 
         {/* Body */}
@@ -133,14 +131,14 @@ export default function ShareModal({
                 type="text"
                 value={examUrl}
                 readOnly
-                className="flex-1 px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600 truncate"
+                className="flex-1 px-3 py-2.5 bg-muted border border-border rounded-lg text-sm text-gray-600 truncate"
               />
               <button
                 onClick={handleCopy}
                 className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
                   copied 
                     ? "bg-green-500 text-white" 
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    : "bg-gray-900 text-white hover:bg-gray-800"
                 }`}
               >
                 <Icon name={copied ? "check-circle" : "copy"} size="sm" />
@@ -152,17 +150,17 @@ export default function ShareModal({
           {/* Schedule Toggle */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-              <Icon name="clock" size="sm" />
+              <Icon name="clock" size="sm" className="text-gray-400" />
               กำหนดเวลาเปิด/ปิดลิงก์
             </label>
             
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => setUseSchedule(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   !useSchedule
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-gray-900 text-white"
+                    : "bg-muted text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 เปิดตลอด
@@ -171,8 +169,8 @@ export default function ShareModal({
                 onClick={() => setUseSchedule(true)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   useSchedule
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-gray-900 text-white"
+                    : "bg-muted text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 กำหนดเวลา
@@ -180,14 +178,14 @@ export default function ShareModal({
             </div>
 
             {useSchedule && (
-              <div className="space-y-3 bg-gray-50 rounded-lg p-4">
+              <div className="space-y-3 bg-muted rounded-lg p-4">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">เวลาเปิดลิงก์</label>
                   <input
                     type="datetime-local"
                     value={scheduledStart}
                     onChange={(e) => setScheduledStart(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -196,7 +194,7 @@ export default function ShareModal({
                     type="datetime-local"
                     value={scheduledEnd}
                     onChange={(e) => setScheduledEnd(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <p className="text-xs text-gray-400">นักเรียนจะเข้าได้เฉพาะช่วงเวลาที่กำหนดเท่านั้น</p>
@@ -206,7 +204,7 @@ export default function ShareModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+        <div className="px-6 py-4 bg-muted border-t border-border flex justify-end gap-3">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium text-sm transition-colors"
@@ -217,7 +215,7 @@ export default function ShareModal({
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isSaving ? (
                 <>
@@ -237,3 +235,4 @@ export default function ShareModal({
     </div>
   );
 }
+

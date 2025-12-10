@@ -10,8 +10,11 @@ const sarabun = Sarabun({
 });
 
 export const metadata: Metadata = {
-  title: "แบบทดสอบออนไลน์ | Online Exam System",
-  description: "ระบบทำแบบทดสอบออนไลน์",
+  title: "MasterExam | ระบบจัดการข้อสอบออนไลน์",
+  description: "ระบบจัดการข้อสอบออนไลน์สำหรับครูและนักเรียน",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

@@ -202,7 +202,7 @@ export default function GradeSubmissionPage() {
       </div>
 
       {/* Student Info Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div className="rounded-xl border border-border bg-card p-4 mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-gray-500">ชื่อ:</span>
@@ -235,7 +235,7 @@ export default function GradeSubmissionPage() {
           return (
             <div
               key={answer.id}
-              className={`bg-white rounded-lg shadow-sm border-2 p-4 ${
+              className={`rounded-xl border-2 bg-card p-4 ${
                 isManualType ? "border-amber-200" : "border-gray-200"
               }`}
             >

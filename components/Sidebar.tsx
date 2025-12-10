@@ -11,7 +11,6 @@ interface MenuItem {
   label: string;
   icon: IconName;
   href: string;
-  badge?: string;
   disabled?: boolean;
 }
 
@@ -22,13 +21,21 @@ interface SidebarProps {
   setIsMobileOpen: (open: boolean) => void;
 }
 
-const menuItems: MenuItem[] = [
-  { id: "DASHBOARD", label: "ภาพรวมการสอบ", icon: "document", href: "/" },
+// Menu for regular users (not logged in)
+const userMenuItems: MenuItem[] = [
+  { id: "EXAM", label: "Exam", icon: "document", href: "/" },
 ];
 
+const userBottomMenuItems: MenuItem[] = [
+  { id: "HELP", label: "Help", icon: "info", href: "#", disabled: true },
+];
+
+// Menu for admin (logged in)
 const adminMenuItems: MenuItem[] = [
-  { id: "ADMIN_DASHBOARD", label: "Dashboard", icon: "chart", href: "/admin/dashboard" },
-  { id: "EXAM_MANAGE", label: "การจัดการข้อสอบ", icon: "settings", href: "/admin/exams" },
+  { id: "EXAM", label: "Exam", icon: "document", href: "/" },
+  { id: "SETTING", label: "Setting", icon: "settings", href: "/admin/exams" },
+  { id: "DASHBOARD", label: "Dashboard", icon: "chart", href: "/admin/dashboard" },
+  { id: "STATUS", label: "Status", icon: "eye", href: "#", disabled: true },
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: SidebarProps) {
@@ -67,6 +74,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     }
   };
 
+  // Choose menu based on login status
+  const menuItems = isLoggedIn ? adminMenuItems : userMenuItems;
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -77,152 +87,150 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
         />
       )}
 
-      {/* Sidebar Container */}
       <aside
         className={`
           fixed lg:sticky top-0 left-0 z-40 h-screen
-          bg-white border-r border-gray-200
+          bg-gray-50 border-r border-gray-200
           transition-all duration-300 ease-in-out flex flex-col
-          ${isCollapsed ? "w-16" : "w-72"}
+          ${isCollapsed ? "w-[72px]" : "w-[260px]"}
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo Area */}
-        <div className={`h-16 flex items-center border-b border-gray-100 ${isCollapsed ? "px-3 justify-center" : "px-6"}`}>
-          <div className="flex items-center gap-3 text-indigo-600">
-            <div className="p-2 bg-indigo-100 rounded-lg flex-shrink-0">
-              <Icon name="bookmark" size="sm" className="text-indigo-600" />
-            </div>
+        <div className={`h-16 flex items-center ${isCollapsed ? "px-3 justify-center" : "px-4"}`}>
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
             {!isCollapsed && (
-              <div>
-                <h1 className="font-bold text-base text-gray-900 leading-none">Classroom</h1>
-                <span className="text-[10px] text-indigo-500 font-semibold tracking-wider">MASTER</span>
-              </div>
+              <span className="font-semibold text-[15px] text-gray-900">MasterExam</span>
             )}
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Main Navigation */}
         <nav className={`flex-1 overflow-y-auto py-4 ${isCollapsed ? "px-2" : "px-3"}`}>
-          {!isCollapsed && (
-            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Menu
+          {/* Admin Label */}
+          {isLoggedIn && !isCollapsed && (
+            <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              Admin
             </p>
           )}
 
-          {menuItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.disabled ? "#" : item.href}
-              onClick={(e) => {
-                if (item.disabled) e.preventDefault();
-                else setIsMobileOpen(false);
-              }}
-              title={isCollapsed ? item.label : undefined}
-              className={`
-                w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium
-                transition-all duration-200 mb-1
-                ${isCollapsed ? "justify-center" : ""}
-                ${isActive(item.href)
-                  ? "bg-indigo-50 text-indigo-600 shadow-sm"
-                  : item.disabled
+          {/* Menu Items */}
+          <div className="space-y-1">
+            {menuItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.disabled ? "#" : item.href}
+                onClick={(e) => {
+                  if (item.disabled) e.preventDefault();
+                  else setIsMobileOpen(false);
+                }}
+                title={isCollapsed ? item.label : undefined}
+                className={`
+                  group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium
+                  transition-all duration-200
+                  ${isCollapsed ? "justify-center" : ""}
+                  ${item.disabled
                     ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }
-              `}
-            >
-              <Icon
-                name={item.icon}
-                size="sm"
-                className={isActive(item.href) ? "text-indigo-600" : ""}
-              />
-              {!isCollapsed && item.label}
-            </Link>
-          ))}
+                    : isActive(item.href)
+                      ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+              >
+                <Icon
+                  name={item.icon}
+                  size="sm"
+                  className={
+                    item.disabled
+                      ? "text-gray-300"
+                      : isActive(item.href)
+                        ? "text-indigo-600"
+                        : "text-gray-400 group-hover:text-gray-600"
+                  }
+                />
+                {!isCollapsed && <span>{item.label}</span>}
+              </Link>
+            ))}
+          </div>
+        </nav>
 
-          {/* Admin Section - แสดงเมื่อ Login แล้วเท่านั้น */}
-          {isLoggedIn && (
-            <>
-              {!isCollapsed && (
-                <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">
-                  Admin
-                </p>
-              )}
-              {isCollapsed && <div className="my-3 border-t border-gray-200" />}
-
-              {adminMenuItems.map((item) => (
+        {/* Bottom Section */}
+        <div className={`border-t border-gray-100 py-3 ${isCollapsed ? "px-2" : "px-3"}`}>
+          {/* Help menu for regular users */}
+          {!isLoggedIn && (
+            <div className="mb-2">
+              {userBottomMenuItems.map((item) => (
                 <Link
                   key={item.id}
-                  href={item.disabled ? "#" : item.href}
-                  onClick={(e) => {
-                    if (item.disabled) e.preventDefault();
-                    else setIsMobileOpen(false);
-                  }}
+                  href={item.href}
                   title={isCollapsed ? item.label : undefined}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium
-                    transition-all duration-200 mb-1
+                    group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium
+                    transition-all duration-200
                     ${isCollapsed ? "justify-center" : ""}
-                    ${isActive(item.href)
-                      ? "bg-indigo-50 text-indigo-600 shadow-sm"
-                      : item.disabled
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ${item.disabled
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }
                   `}
+                  onClick={(e) => item.disabled && e.preventDefault()}
                 >
                   <Icon
                     name={item.icon}
                     size="sm"
-                    className={isActive(item.href) ? "text-indigo-600" : ""}
+                    className={item.disabled ? "text-gray-300" : "text-gray-400 group-hover:text-gray-600"}
                   />
-                  {!isCollapsed && item.label}
+                  {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               ))}
-            </>
+            </div>
           )}
-        </nav>
 
-        {/* Footer - Login/Logout */}
-        <div className={`p-3 border-t border-gray-100 ${isCollapsed ? "" : "space-y-2"}`}>
+          {/* Login / Logout Button */}
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
+              title={isCollapsed ? "Logout" : undefined}
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                text-red-500 hover:bg-red-50 transition-all w-full
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium
+                text-red-500 hover:bg-red-50 transition-all duration-200
                 ${isCollapsed ? "justify-center" : ""}
               `}
-              title={isCollapsed ? "ออกจากระบบ" : undefined}
             >
-              <Icon name="arrow-left" size="sm" />
-              {!isCollapsed && <span>ออกจากระบบ</span>}
+              <Icon name="unlock" size="sm" />
+              {!isCollapsed && <span>Logout</span>}
             </button>
           ) : (
             <Link
               href="/login"
+              title={isCollapsed ? "Login" : undefined}
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                text-indigo-600 hover:bg-indigo-50 transition-all w-full
+                flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium
+                text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200
                 ${isCollapsed ? "justify-center" : ""}
               `}
-              title={isCollapsed ? "เข้าสู่ระบบ" : undefined}
             >
-              <Icon name="user" size="sm" />
-              {!isCollapsed && <span>เข้าสู่ระบบ (ครู)</span>}
+              <Icon name="user" size="sm" className="text-gray-400" />
+              {!isCollapsed && <span>Login</span>}
             </Link>
           )}
 
+          {/* Collapse/Expand Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={`
-              flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-              text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all w-full
+              w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium
+              text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all duration-200 mt-2
               ${isCollapsed ? "justify-center" : ""}
             `}
-            title={isCollapsed ? "ขยาย" : "ย่อ"}
+            title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
           >
-            <Icon name={isCollapsed ? "arrow-right" : "arrow-left"} size="sm" />
+            <Icon 
+              name={isCollapsed ? "sidebar-expand" : "sidebar-collapse"} 
+              size="sm" 
+              className="text-gray-400" 
+            />
             {!isCollapsed && <span>ย่อเมนู</span>}
           </button>
         </div>

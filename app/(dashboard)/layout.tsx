@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Icon from "@/components/Icon";
 
@@ -12,8 +13,11 @@ export default function DashboardGroupLayout({
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const pathname = usePathname();
+  const isFullWidthPage = pathname?.endsWith("/edit");
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-surface">
       {/* Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -32,12 +36,12 @@ export default function DashboardGroupLayout({
           >
             <Icon name="menu" size="md" />
           </button>
-          <h1 className="font-bold text-gray-900">Classroom Master</h1>
+          <h1 className="font-bold text-gray-900">MasterExam</h1>
           <div className="w-10" />
         </div>
 
         {/* Page Content */}
-        <div className="p-4 lg:p-6">
+        <div className={isFullWidthPage ? "" : "p-4 lg:p-6"}>
           {children}
         </div>
       </main>
