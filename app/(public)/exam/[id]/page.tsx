@@ -160,9 +160,13 @@ export default function PublicExamPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [step, isSubmitting]);
 
-  // Fullscreen exit detection
+  // Fullscreen exit detection (desktop only)
   useEffect(() => {
     if (step !== "exam" || isSubmitting) return;
+    
+    // Only check fullscreen on desktop (not mobile/tablet)
+    const isDesktop = window.innerWidth >= 1024;
+    if (!isDesktop) return;
     
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
@@ -243,25 +247,31 @@ export default function PublicExamPage() {
       return;
     }
     
-    // Request fullscreen
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (err) {
-      console.warn("Fullscreen request failed:", err);
-      toast.showToast("info", "ไม่สามารถเปิดโหมดเต็มหน้าจอได้ กรุณากด F11");
+    // Request fullscreen (desktop and iPad only, not mobile phones)
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (err) {
+        console.warn("Fullscreen request failed:", err);
+        // Don't show F11 message on tablets
+        if (window.innerWidth >= 1024) {
+          toast.showToast("info", "ไม่สามารถเปิดโหมดเต็มหน้าจอได้ กรุณากด F11");
+        }
+      }
     }
     
     sessionStorage.setItem("studentInfo", JSON.stringify(studentInfo));
     
     // Create exam session for real-time monitoring
-    if (examSet && questions.length > 0) {
+    if (examSet && shuffledQuestions.length > 0) {
       const sessionId = await createExamSession({
         exam_set_id: examId,
         student_name: `${studentInfo.firstName} ${studentInfo.lastName}`,
         student_id: studentInfo.studentId,
         classroom: studentInfo.classroom || undefined,
         current_question: 1,
-        total_questions: questions.length,
+        total_questions: shuffledQuestions.length,
         time_remaining: examTimeSeconds || undefined,
         warnings: 0,
         status: "active",
