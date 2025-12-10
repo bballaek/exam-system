@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import { useToast } from "@/components/Toast";
+import { createExamSession, updateExamSession, submitExamSession } from "@/lib/exam-session";
 
 // Types
 type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE";
@@ -96,6 +97,9 @@ export default function PublicExamPage() {
   
   // Instructions accepted checkbox
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
+  
+  // Session tracking for real-time monitoring
+  const sessionIdRef = useRef<string | null>(null);
 
   // Calculate exam time from database or default
   const examTimeSeconds = examSet?.timeLimitMinutes 
@@ -135,6 +139,15 @@ export default function PublicExamPage() {
         setTabSwitchCount((prev) => {
           const newCount = prev + 1;
           setShowWarning(true);
+          
+          // Update session with warning
+          if (sessionIdRef.current) {
+            updateExamSession(sessionIdRef.current, {
+              warnings: newCount,
+              last_warning: "สลับ Tab",
+            });
+          }
+          
           if (newCount >= MAX_TAB_SWITCHES) {
             toast.showToast("error", `คุณสลับหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
             handleSubmit();
@@ -157,6 +170,15 @@ export default function PublicExamPage() {
           const newCount = prev + 1;
           toast.showToast("warning", `คุณออกจากโหมดเต็มหน้าจอ! (เตือนครั้งที่ ${newCount}/${MAX_TAB_SWITCHES})`);
           setShowWarning(true);
+          
+          // Update session with warning
+          if (sessionIdRef.current) {
+            updateExamSession(sessionIdRef.current, {
+              warnings: newCount,
+              last_warning: "ออกจาก Fullscreen",
+            });
+          }
+          
           if (newCount >= MAX_TAB_SWITCHES) {
             toast.showToast("error", `คุณออกจากโหมดเต็มหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
             handleSubmit();
@@ -193,6 +215,16 @@ export default function PublicExamPage() {
     return () => clearInterval(timer);
   }, [step, isSubmitting, examTimeSeconds, timeLeft]);
 
+  // Update session progress when question changes
+  useEffect(() => {
+    if (step !== "exam" || !sessionIdRef.current) return;
+    
+    updateExamSession(sessionIdRef.current, {
+      current_question: currentQuestionIndex + 1,
+      time_remaining: timeLeft || undefined,
+    });
+  }, [currentQuestionIndex, step]);
+
   const formatTime = (s: number) => `${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
   const getTimerColor = () => {
     if (!timeLeft || !examTimeSeconds) return "bg-green-500";
@@ -220,6 +252,25 @@ export default function PublicExamPage() {
     }
     
     sessionStorage.setItem("studentInfo", JSON.stringify(studentInfo));
+    
+    // Create exam session for real-time monitoring
+    if (examSet && questions.length > 0) {
+      const sessionId = await createExamSession({
+        exam_set_id: examId,
+        student_name: `${studentInfo.firstName} ${studentInfo.lastName}`,
+        student_id: studentInfo.studentId,
+        classroom: studentInfo.classroom || undefined,
+        current_question: 1,
+        total_questions: questions.length,
+        time_remaining: examTimeSeconds || undefined,
+        warnings: 0,
+        status: "active",
+      });
+      if (sessionId) {
+        sessionIdRef.current = sessionId;
+      }
+    }
+    
     setStep("exam");
   };
 
@@ -252,6 +303,11 @@ export default function PublicExamPage() {
       });
       const result = await response.json();
       if (result.success) {
+        // Mark session as submitted
+        if (sessionIdRef.current) {
+          await submitExamSession(sessionIdRef.current);
+        }
+        
         sessionStorage.removeItem("studentInfo");
         const fullName = `${studentInfo.firstName} ${studentInfo.lastName}`;
         const examTitle = encodeURIComponent(examSet?.title || "แบบทดสอบ");
