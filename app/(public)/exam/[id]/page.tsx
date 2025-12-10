@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import { useToast } from "@/components/Toast";
-import { createExamSession, updateExamSession, submitExamSession } from "@/lib/exam-session";
+import { createExamSession, updateExamSession, deleteExamSession } from "@/lib/exam-session";
 
 // Types
 type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE";
@@ -229,6 +229,21 @@ export default function PublicExamPage() {
     });
   }, [currentQuestionIndex, step]);
 
+  // Update time remaining every 30 seconds
+  useEffect(() => {
+    if (step !== "exam" || !sessionIdRef.current) return;
+    
+    const interval = setInterval(() => {
+      if (sessionIdRef.current && timeLeft !== null) {
+        updateExamSession(sessionIdRef.current, {
+          time_remaining: timeLeft,
+        });
+      }
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [step, timeLeft]);
+
   const formatTime = (s: number) => `${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
   const getTimerColor = () => {
     if (!timeLeft || !examTimeSeconds) return "bg-green-500";
@@ -313,9 +328,9 @@ export default function PublicExamPage() {
       });
       const result = await response.json();
       if (result.success) {
-        // Mark session as submitted
+        // Delete session after submission (cleanup)
         if (sessionIdRef.current) {
-          await submitExamSession(sessionIdRef.current);
+          await deleteExamSession(sessionIdRef.current);
         }
         
         sessionStorage.removeItem("studentInfo");
