@@ -35,7 +35,7 @@ const adminMenuItems: MenuItem[] = [
   { id: "EXAM", label: "Exam", icon: "document", href: "/" },
   { id: "SETTING", label: "Setting", icon: "settings", href: "/admin/exams" },
   { id: "DASHBOARD", label: "Dashboard", icon: "chart", href: "/admin/dashboard" },
-  { id: "STATUS", label: "Status", icon: "eye", href: "#", disabled: true },
+  { id: "STATUS", label: "Status", icon: "eye", href: "/admin/status" },
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: SidebarProps) {
