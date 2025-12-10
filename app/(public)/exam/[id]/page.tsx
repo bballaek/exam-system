@@ -222,7 +222,8 @@ export default function PublicExamPage() {
       if (result.success) {
         sessionStorage.removeItem("studentInfo");
         const fullName = `${studentInfo.firstName} ${studentInfo.lastName}`;
-        router.push(`/result?score=${result.score}&totalPoints=${result.totalPoints}&name=${encodeURIComponent(fullName)}`);
+        const examTitle = encodeURIComponent(examSet?.title || "แบบทดสอบ");
+        router.push(`/result?score=${result.score}&totalPoints=${result.totalPoints}&name=${encodeURIComponent(fullName)}&examId=${examId}&examTitle=${examTitle}`);
       } else {
         throw new Error(result.error || "ไม่สามารถส่งคำตอบได้");
       }

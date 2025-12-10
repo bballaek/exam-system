@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Icon from "@/components/Icon";
 
 function ResultContent() {
@@ -10,7 +10,15 @@ function ResultContent() {
   const score = parseInt(searchParams.get("score") || "0", 10);
   const totalPoints = parseInt(searchParams.get("totalPoints") || "100", 10);
   const studentName = searchParams.get("name") || "ผู้สอบ";
+  const examId = searchParams.get("examId") || "";
+  const examTitle = searchParams.get("examTitle") || "แบบทดสอบ";
   const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+
+  // Email modal state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const getGradeInfo = () => {
     if (percentage >= 80) return { grade: "ดีเยี่ยม", color: "text-green-600", bgColor: "bg-green-500" };
@@ -21,6 +29,46 @@ function ResultContent() {
 
   const gradeInfo = getGradeInfo();
   const currentYear = new Date().getFullYear();
+
+  const handleSendEmail = async () => {
+    if (!email.trim() || !email.includes("@")) {
+      alert("กรุณากรอกอีเมลที่ถูกต้อง");
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await fetch("/api/send-result-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          studentName,
+          examTitle,
+          score,
+          totalPoints,
+          percentage,
+          grade: gradeInfo.grade,
+        }),
+      });
+
+      if (response.ok) {
+        setEmailSent(true);
+        setTimeout(() => {
+          setShowEmailModal(false);
+          setEmailSent(false);
+          setEmail("");
+        }, 2000);
+      } else {
+        alert("ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface py-8 px-4">
@@ -78,14 +126,37 @@ function ResultContent() {
             <div className="pt-4 border-t border-border">
               <p className="text-center text-sm text-gray-400 mb-4">ขอบคุณที่ทำแบบทดสอบ</p>
               
-              {/* Action Button */}
-              <Link
-                href="/"
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-gray-900 hover:bg-gray-800 text-white"
-              >
-                <Icon name="home" size="sm" />
-                กลับหน้าแรก
-              </Link>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Send Email Button */}
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Icon name="share" size="sm" />
+                  ส่งผลสอบทางอีเมล
+                </button>
+
+                {/* Retry Button */}
+                {examId && (
+                  <Link
+                    href={`/exam/${examId}`}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    <Icon name="refresh" size="sm" />
+                    สอบอีกครั้ง
+                  </Link>
+                )}
+
+                {/* Home Button */}
+                <Link
+                  href="/"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  <Icon name="home" size="sm" />
+                  กลับหน้าแรก
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -95,6 +166,79 @@ function ResultContent() {
           © {currentYear} MasterExam
         </p>
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Icon name="share" size="sm" className="text-indigo-600" />
+                ส่งผลสอบทางอีเมล
+              </h2>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <Icon name="close" size="sm" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {emailSent ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon name="check-circle" size="lg" className="text-green-600" />
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">ส่งเรียบร้อย!</p>
+                  <p className="text-sm text-gray-500 mt-1">ผลสอบถูกส่งไปที่ {email}</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    กรอกอีเมลเพื่อรับผลสอบ
+                  </p>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="example@email.com"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            {!emailSent && (
+              <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleSendEmail}
+                  disabled={isSending || !email.trim()}
+                  className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSending ? (
+                    <>
+                      <Icon name="spinner" size="sm" />
+                      กำลังส่ง...
+                    </>
+                  ) : (
+                    "ส่งอีเมล"
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -110,3 +254,4 @@ export default function ResultPage() {
     </Suspense>
   );
 }
+
