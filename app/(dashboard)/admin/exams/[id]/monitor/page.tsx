@@ -13,6 +13,8 @@ export default function ExamMonitorPage() {
   const [sessions, setSessions] = useState<ExamSession[]>([]);
   const [examTitle, setExamTitle] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch exam title
   useEffect(() => {
@@ -38,10 +40,22 @@ export default function ExamMonitorPage() {
     
     const unsubscribe = subscribeToExamSessions(examId, (updatedSessions) => {
       setSessions(updatedSessions);
+      setLastUpdated(new Date());
     });
 
     return () => unsubscribe();
   }, [examId]);
+
+  // Manual refresh function
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Re-subscribe to trigger a fresh fetch
+    subscribeToExamSessions(examId, (updatedSessions) => {
+      setSessions(updatedSessions);
+      setLastUpdated(new Date());
+    });
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   const formatTime = (seconds?: number) => {
     if (!seconds) return "--:--";
@@ -106,10 +120,22 @@ export default function ExamMonitorPage() {
             <p className="text-gray-500 mt-1">{examTitle}</p>
           </div>
           
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="font-bold">{sessions.length}</span>
-            <span className="text-sm">คนกำลังสอบ</span>
+          <div className="flex items-center gap-4">
+            {/* Refresh button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Icon name="refresh" size="sm" className={isRefreshing ? "animate-spin" : ""} />
+              <span className="text-sm">รีเฟรช</span>
+            </button>
+            
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="font-bold">{sessions.length}</span>
+              <span className="text-sm">คนกำลังสอบ</span>
+            </div>
           </div>
         </div>
       </div>
@@ -180,6 +206,9 @@ export default function ExamMonitorPage() {
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-red-500"></span>
           เตือนเกิน 3 ครั้ง
+        </div>
+        <div className="ml-auto text-xs text-gray-400">
+          อัพเดทล่าสุด: {lastUpdated.toLocaleTimeString("th-TH")}
         </div>
       </div>
     </div>
