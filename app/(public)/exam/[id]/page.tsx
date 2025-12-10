@@ -147,6 +147,29 @@ export default function PublicExamPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [step, isSubmitting]);
 
+  // Fullscreen exit detection
+  useEffect(() => {
+    if (step !== "exam" || isSubmitting) return;
+    
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setTabSwitchCount((prev) => {
+          const newCount = prev + 1;
+          toast.showToast("warning", `คุณออกจากโหมดเต็มหน้าจอ! (เตือนครั้งที่ ${newCount}/${MAX_TAB_SWITCHES})`);
+          setShowWarning(true);
+          if (newCount >= MAX_TAB_SWITCHES) {
+            toast.showToast("error", `คุณออกจากโหมดเต็มหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            handleSubmit();
+          }
+          return newCount;
+        });
+      }
+    };
+    
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [step, isSubmitting]);
+
   // Timer - only runs if there's a time limit
   useEffect(() => {
     if (step !== "exam" || isSubmitting || examTimeSeconds === null) return;
@@ -182,11 +205,20 @@ export default function PublicExamPage() {
   // Handlers
   const handleContinueToInfo = () => setStep("info");
   
-  const handleStartExam = () => {
+  const handleStartExam = async () => {
     if (!studentInfo.firstName.trim() || !studentInfo.lastName.trim() || !studentInfo.studentId.trim()) {
       toast.showToast("warning", "กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
+    
+    // Request fullscreen
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (err) {
+      console.warn("Fullscreen request failed:", err);
+      toast.showToast("info", "ไม่สามารถเปิดโหมดเต็มหน้าจอได้ กรุณากด F11");
+    }
+    
     sessionStorage.setItem("studentInfo", JSON.stringify(studentInfo));
     setStep("exam");
   };
