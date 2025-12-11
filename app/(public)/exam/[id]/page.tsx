@@ -637,7 +637,7 @@ export default function PublicExamPage() {
                       value={studentInfo.firstName} 
                       onChange={(e) => setStudentInfo({ ...studentInfo, firstName: e.target.value })} 
                       className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="ชื่อ" 
+                      placeholder="ชื่อภาษาไทย" 
                     />
                   </div>
                   <div>
@@ -647,7 +647,7 @@ export default function PublicExamPage() {
                       value={studentInfo.lastName} 
                       onChange={(e) => setStudentInfo({ ...studentInfo, lastName: e.target.value })} 
                       className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="นามสกุล" 
+                      placeholder="นามสกุลภาษาไทย" 
                     />
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function PublicExamPage() {
                     value={studentInfo.studentId} 
                     onChange={(e) => setStudentInfo({ ...studentInfo, studentId: e.target.value })} 
                     className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                    placeholder="เช่น 65001" 
+                    placeholder="เช่น 38888" 
                   />
                 </div>
 
@@ -683,7 +683,7 @@ export default function PublicExamPage() {
                       value={studentInfo.classroom} 
                       onChange={(e) => setStudentInfo({ ...studentInfo, classroom: e.target.value })} 
                       className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="เช่น ม.6/1" 
+                      placeholder="เช่น 2" 
                     />
                   </div>
                 </div>

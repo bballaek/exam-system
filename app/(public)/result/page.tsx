@@ -128,14 +128,14 @@ function ResultContent() {
               
               {/* Action Buttons */}
               <div className="space-y-3">
-                {/* Send Email Button */}
-                <button
+                {/* Send Email Button - Hidden for now */}
+                {/* <button
                   onClick={() => setShowEmailModal(true)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                   <Icon name="share" size="sm" />
                   ส่งผลสอบทางอีเมล
-                </button>
+                </button> */}
 
                 {/* Retry Button */}
                 {examId && (
