@@ -14,26 +14,55 @@ export async function GET() {
             questions: true,
             submissions: true
           }
+        },
+        questions: {
+          select: {
+            type: true,
+            points: true
+          }
         }
       }
     });
 
     type ExamSetType = typeof examSets[number];
-    const formattedExamSets = examSets.map((exam: ExamSetType) => ({
-      id: exam.id,
-      title: exam.title,
-      description: exam.description,
-      subject: exam.subject,
-      isActive: exam.isActive,
-      createdAt: exam.createdAt.toISOString(),
-      timeLimitMinutes: exam.timeLimitMinutes,
-      shuffleQuestions: (exam as ExamSetType & { shuffleQuestions?: boolean }).shuffleQuestions ?? false,
-      scheduledStart: exam.scheduledStart?.toISOString() || null,
-      scheduledEnd: exam.scheduledEnd?.toISOString() || null,
-      questionCount: exam._count.questions,
-      submissionCount: exam._count.submissions,
-      _count: exam._count
-    }));
+    const formattedExamSets = examSets.map((exam: ExamSetType) => {
+      // Count questions by type
+      const questionTypeCounts = {
+        CHOICE: 0,
+        SHORT: 0,
+        CODEMSA: 0,
+        TRUE_FALSE: 0
+      };
+      
+      // Calculate total points
+      let totalPoints = 0;
+      
+      exam.questions.forEach((q) => {
+        const type = q.type as keyof typeof questionTypeCounts;
+        if (type in questionTypeCounts) {
+          questionTypeCounts[type]++;
+        }
+        totalPoints += (q as { points?: number }).points || 1;
+      });
+
+      return {
+        id: exam.id,
+        title: exam.title,
+        description: exam.description,
+        subject: exam.subject,
+        isActive: exam.isActive,
+        createdAt: exam.createdAt.toISOString(),
+        timeLimitMinutes: exam.timeLimitMinutes,
+        shuffleQuestions: (exam as ExamSetType & { shuffleQuestions?: boolean }).shuffleQuestions ?? false,
+        scheduledStart: exam.scheduledStart?.toISOString() || null,
+        scheduledEnd: exam.scheduledEnd?.toISOString() || null,
+        questionCount: exam._count.questions,
+        submissionCount: exam._count.submissions,
+        questionTypeCounts,
+        totalPoints,
+        _count: exam._count
+      };
+    });
 
     return NextResponse.json({
       success: true,

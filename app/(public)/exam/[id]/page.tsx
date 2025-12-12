@@ -98,6 +98,12 @@ export default function PublicExamPage() {
   // Instructions accepted checkbox
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
   
+  // Start exam confirmation modal
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
+  
+  // Countdown before starting exam
+  const [countdown, setCountdown] = useState<number | null>(null);
+  
   // Session tracking for real-time monitoring
   const sessionIdRef = useRef<string | null>(null);
 
@@ -498,26 +504,74 @@ export default function PublicExamPage() {
             {/* Content */}
             <div className="p-6">
               {/* Info Cards */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="rounded-xl border border-border bg-muted p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center">
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="rounded-xl border border-border bg-muted p-3 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-gray-900 flex items-center justify-center">
                     <Icon name="file" size="sm" className="text-white" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{examSet.questions.length}</div>
-                    <div className="text-xs text-gray-500 font-medium">จำนวนข้อ</div>
+                    <div className="text-xl font-bold text-gray-900">{examSet.questions.length}</div>
+                    <div className="text-[10px] text-gray-500 font-medium">จำนวนข้อ</div>
                   </div>
                 </div>
-                <div className="rounded-xl border border-border bg-muted p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center">
+                <div className="rounded-xl border border-border bg-muted p-3 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-gray-900 flex items-center justify-center">
                     <Icon name="clock" size="sm" className="text-white" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{examSet.timeLimitMinutes || "∞"}</div>
-                    <div className="text-xs text-gray-500 font-medium">{examSet.timeLimitMinutes ? "นาที" : "ไม่จำกัดเวลา"}</div>
+                    <div className="text-xl font-bold text-gray-900">{examSet.timeLimitMinutes || "∞"}</div>
+                    <div className="text-[10px] text-gray-500 font-medium">{examSet.timeLimitMinutes ? "นาที" : "ไม่จำกัด"}</div>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border bg-muted p-3 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-gray-900 flex items-center justify-center">
+                    <Icon name="star" size="sm" className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-gray-900">{examSet.questions.reduce((sum, q) => sum + (q.points || 1), 0)}</div>
+                    <div className="text-[10px] text-gray-500 font-medium">คะแนนเต็ม</div>
                   </div>
                 </div>
               </div>
+
+              {/* Question Types Breakdown */}
+              {(() => {
+                const typeCounts = {
+                  CHOICE: examSet.questions.filter(q => q.type === "CHOICE").length,
+                  SHORT: examSet.questions.filter(q => q.type === "SHORT").length,
+                  CODEMSA: examSet.questions.filter(q => q.type === "CODEMSA").length,
+                };
+                const hasTypes = typeCounts.CHOICE > 0 || typeCounts.SHORT > 0 || typeCounts.CODEMSA > 0;
+                
+                return hasTypes ? (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Icon name="list" size="sm" className="text-gray-600" />
+                      ประเภทคำถาม
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {typeCounts.CHOICE > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          ปรนัย {typeCounts.CHOICE} ข้อ
+                        </span>
+                      )}
+                      {typeCounts.SHORT > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                          <span className="w-2 h-2 rounded-full bg-green-500" />
+                          เติมคำตอบ {typeCounts.SHORT} ข้อ
+                        </span>
+                      )}
+                      {typeCounts.CODEMSA > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                          <span className="w-2 h-2 rounded-full bg-purple-500" />
+                          โค้ด {typeCounts.CODEMSA} ข้อ
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
 
               {/* Section 1: General Rules */}
               <div className="mb-6">
@@ -683,7 +737,7 @@ export default function PublicExamPage() {
                       value={studentInfo.classroom} 
                       onChange={(e) => setStudentInfo({ ...studentInfo, classroom: e.target.value })} 
                       className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="เช่น 2" 
+                      placeholder="เช่น 2 ไม่ต้องกรอก /" 
                     />
                   </div>
                 </div>
@@ -692,13 +746,90 @@ export default function PublicExamPage() {
               {/* Submit Button */}
               <div className="mt-6 pt-4 border-t border-border">
                 <button 
-                  onClick={handleStartExam}
+                  onClick={() => {
+                    if (!studentInfo.firstName.trim() || !studentInfo.lastName.trim() || !studentInfo.studentId.trim()) {
+                      toast.showToast("warning", "กรุณากรอกข้อมูลให้ครบถ้วน");
+                      return;
+                    }
+                    setShowStartConfirm(true);
+                  }}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   เริ่มทำข้อสอบ <Icon name="arrow-right" size="sm" />
                 </button>
               </div>
             </div>
+
+            {/* Start Confirmation Modal */}
+            {showStartConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+                <div className="rounded-xl border border-border bg-card max-w-md w-full p-6 text-center">
+                  {countdown !== null ? (
+                    // Countdown View
+                    <>
+                      <div className="w-24 h-24 rounded-full bg-gray-900 flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <span className="text-5xl font-bold text-white">{countdown}</span>
+                      </div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-2">กำลังเข้าสู่ห้องสอบ...</h2>
+                      <p className="text-sm text-gray-500">เตรียมตัวให้พร้อม</p>
+                    </>
+                  ) : (
+                    // Warning View
+                    <>
+                      <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Icon name="warning" size="lg" className="text-amber-600" />
+                      </div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-2">คำเตือนก่อนเริ่มสอบ</h2>
+                      <div className="text-left bg-muted rounded-lg p-4 mb-4">
+                        <ul className="space-y-2 text-sm text-gray-600">
+                          <li className="flex gap-2 items-start">
+                            <span className="text-red-500 font-bold">⚠️</span>
+                            <span><strong className="text-red-600">ห้ามสลับหน้าจอ</strong> หรือเปิดแท็บอื่นระหว่างทำข้อสอบ</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-red-500 font-bold">⚠️</span>
+                            <span>สลับหน้าจอเกิน <strong className="text-red-600">3 ครั้ง</strong> ระบบจะส่งคำตอบอัตโนมัติ</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-amber-500 font-bold">⏱️</span>
+                            <span>เมื่อกดเริ่มแล้ว เวลาจะเริ่มนับถอยหลังทันที</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => setShowStartConfirm(false)} 
+                          className="flex-1 py-3 bg-muted text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button 
+                          onClick={() => {
+                            // Start countdown
+                            setCountdown(3);
+                            let count = 3;
+                            const timer = setInterval(() => {
+                              count--;
+                              if (count <= 0) {
+                                clearInterval(timer);
+                                setShowStartConfirm(false);
+                                setCountdown(null);
+                                handleStartExam();
+                              } else {
+                                setCountdown(count);
+                              }
+                            }, 1000);
+                          }} 
+                          className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                        >
+                          เริ่มเลย
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

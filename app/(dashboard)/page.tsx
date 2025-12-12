@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import ExamCard from "@/components/ExamCard";
 import Icon from "@/components/Icon";
 
+interface QuestionTypeCounts {
+  CHOICE: number;
+  SHORT: number;
+  CODEMSA: number;
+  TRUE_FALSE: number;
+}
+
 interface ExamSet {
   id: string;
   title: string;
@@ -14,6 +21,8 @@ interface ExamSet {
   questionCount: number;
   submissionCount: number;
   timeLimitMinutes: number | null;
+  questionTypeCounts?: QuestionTypeCounts;
+  totalPoints?: number;
   createdAt: string;
 }
 
@@ -144,11 +153,12 @@ export default function DashboardPage() {
                 key={exam.id}
                 id={exam.id}
                 title={exam.title}
-                teacher="ผู้สอน"
                 subject={exam.subject || "ทั่วไป"}
                 subjectColor={subjectColors[exam.subject || ""] || "default"}
                 time={exam.timeLimitMinutes || 0}
                 questionCount={exam.questionCount}
+                totalPoints={exam.totalPoints}
+                questionTypeCounts={exam.questionTypeCounts}
                 isActive={exam.isActive}
                 onStart={handleSelectExam}
               />

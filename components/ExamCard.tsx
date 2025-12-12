@@ -2,14 +2,22 @@
 
 import Icon from "@/components/Icon";
 
+interface QuestionTypeCounts {
+  CHOICE: number;
+  SHORT: number;
+  CODEMSA: number;
+  TRUE_FALSE: number;
+}
+
 interface ExamCardProps {
   id: string;
   title: string;
-  teacher: string;
   subject: string;
   subjectColor: string;
   time: number;
   questionCount: number;
+  totalPoints?: number;
+  questionTypeCounts?: QuestionTypeCounts;
   isActive: boolean;
   onStart: (id: string) => void;
 }
@@ -17,11 +25,12 @@ interface ExamCardProps {
 export default function ExamCard({
   id,
   title,
-  teacher,
   subject,
   subjectColor,
   time,
   questionCount,
+  totalPoints,
+  questionTypeCounts,
   isActive,
   onStart,
 }: ExamCardProps) {
@@ -142,52 +151,87 @@ export default function ExamCard({
       </div>
 
       {/* Title */}
-      <h3 className={`text-lg font-bold ${tone.text} leading-snug line-clamp-2 mb-2`}>
+      <h3 className={`text-lg font-bold ${tone.text} leading-snug line-clamp-2 mb-4`}>
         {title}
       </h3>
 
-      {/* Teacher */}
-      <div className={`flex items-center gap-2 ${tone.muted} mb-5`}>
-        <Icon name="user" className="w-4 h-4" />
-        <span className="text-sm">{teacher}</span>
-      </div>
-
       {/* Stats */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-2 mb-5">
         <div
           className={`
-            flex-1 flex items-center gap-2.5
-            ${tone.iconBg} rounded-xl px-3 py-2.5
+            flex-1 flex items-center gap-2
+            ${tone.iconBg} rounded-xl px-2.5 py-2
           `}
         >
-          <Icon name="clock" className={`w-4 h-4 ${tone.muted}`} />
+          <Icon name="clock" className={`w-3.5 h-3.5 ${tone.muted}`} />
           <div className="flex flex-col">
-            <span className={`text-[10px] uppercase tracking-wide ${tone.muted}`}>
+            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
               เวลา
             </span>
-            <span className={`text-sm font-semibold ${tone.text}`}>
-              {time ? `${time} นาที` : "ไม่จำกัด"}
+            <span className={`text-xs font-semibold ${tone.text}`}>
+              {time ? `${time} นาที` : "∞"}
             </span>
           </div>
         </div>
 
         <div
           className={`
-            flex-1 flex items-center gap-2.5
-            ${tone.iconBg} rounded-xl px-3 py-2.5
+            flex-1 flex items-center gap-2
+            ${tone.iconBg} rounded-xl px-2.5 py-2
           `}
         >
-          <Icon name="file-text" className={`w-4 h-4 ${tone.muted}`} />
+          <Icon name="file-text" className={`w-3.5 h-3.5 ${tone.muted}`} />
           <div className="flex flex-col">
-            <span className={`text-[10px] uppercase tracking-wide ${tone.muted}`}>
+            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
               จำนวน
             </span>
-            <span className={`text-sm font-semibold ${tone.text}`}>
+            <span className={`text-xs font-semibold ${tone.text}`}>
               {questionCount} ข้อ
             </span>
           </div>
         </div>
+
+        <div
+          className={`
+            flex-1 flex items-center gap-2
+            ${tone.iconBg} rounded-xl px-2.5 py-2
+          `}
+        >
+          <Icon name="star" className={`w-3.5 h-3.5 ${tone.muted}`} />
+          <div className="flex flex-col">
+            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
+              คะแนน
+            </span>
+            <span className={`text-xs font-semibold ${tone.text}`}>
+              {totalPoints || questionCount} คะแนน
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Question Types Breakdown */}
+      {questionTypeCounts && (questionTypeCounts.CHOICE > 0 || questionTypeCounts.SHORT > 0 || questionTypeCounts.CODEMSA > 0) && (
+        <div className={`flex flex-wrap gap-2 mb-5 ${tone.muted}`}>
+          {questionTypeCounts.CHOICE > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              ปรนัย {questionTypeCounts.CHOICE}
+            </span>
+          )}
+          {questionTypeCounts.SHORT > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              เติมคำตอบ {questionTypeCounts.SHORT}
+            </span>
+          )}
+          {questionTypeCounts.CODEMSA > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+              โค้ด {questionTypeCounts.CODEMSA}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Action Button */}
       {isActive ? (
