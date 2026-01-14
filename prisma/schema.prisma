@@ -25,6 +25,7 @@ model ExamSet {
   timeLimitMinutes Int?       // จำกัดเวลาทำ (นาที)
   shuffleQuestions Boolean @default(false) // สลับลำดับข้อสอบให้แต่ละคนไม่เหมือนกัน
   lockScreen       Boolean @default(false) // ล็อกหน้าจอระหว่างทำข้อสอบ
+  instructions     Json?      // คำชี้แจง/คำแนะนำ (array of strings) - ถ้าเป็น null จะใช้ค่าพื้นฐาน
   
   questions   Question[]
   submissions ExamSubmission[]

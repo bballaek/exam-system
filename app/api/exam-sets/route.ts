@@ -57,6 +57,9 @@ export async function GET() {
         lockScreen: (exam as ExamSetType & { lockScreen?: boolean }).lockScreen ?? false,
         scheduledStart: exam.scheduledStart?.toISOString() || null,
         scheduledEnd: exam.scheduledEnd?.toISOString() || null,
+        instructions: Array.isArray((exam as ExamSetType & { instructions?: any }).instructions)
+          ? (exam as ExamSetType & { instructions?: any }).instructions
+          : null,
         questionCount: exam._count.questions,
         submissionCount: exam._count.submissions,
         questionTypeCounts,
@@ -94,8 +97,9 @@ export async function POST(request: NextRequest) {
         description: body.description || null,
         subject: body.subject || null,
         timeLimitMinutes: body.timeLimitMinutes || null,
+        ...(body.instructions && { instructions: body.instructions }),
         isActive: false,
-      },
+      } as any, // Temporary type assertion until migration is run
     });
 
     return NextResponse.json(examSet, { status: 201 });

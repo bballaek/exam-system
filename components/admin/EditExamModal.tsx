@@ -15,6 +15,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
   const [editTitle, setEditTitle] = useState("");
   const [editSubject, setEditSubject] = useState("");
   const [editTimeLimit, setEditTimeLimit] = useState<number | null>(null);
+  const [editInstructions, setEditInstructions] = useState("");
   const [editShuffleQuestions, setEditShuffleQuestions] = useState(false);
   const [editLockScreen, setEditLockScreen] = useState(false);
   const [editIsActive, setEditIsActive] = useState(false);
@@ -26,6 +27,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       setEditTitle(exam.title);
       setEditSubject(exam.subject || "");
       setEditTimeLimit(exam.timeLimitMinutes || null);
+      setEditInstructions(Array.isArray(exam.instructions) ? exam.instructions.join('\n') : "");
       setEditShuffleQuestions(exam.shuffleQuestions || false);
       setEditLockScreen(exam.lockScreen || false);
       setEditIsActive(exam.isActive || false);
@@ -39,6 +41,10 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
 
     setIsSavingEdit(true);
     try {
+      const instructionsArray = editInstructions.trim()
+        ? editInstructions.trim().split('\n').filter(line => line.trim())
+        : null;
+
       const response = await fetch(`/api/exam-sets/${exam.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -46,6 +52,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
           title: editTitle.trim(),
           subject: editSubject.trim() || null,
           timeLimitMinutes: editTimeLimit,
+          instructions: instructionsArray,
           shuffleQuestions: editShuffleQuestions,
           lockScreen: editLockScreen,
           isActive: editIsActive,
@@ -136,6 +143,21 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-1">No time limit</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              คำชี้แจง (Optional)
+            </label>
+            <textarea
+              value={editInstructions}
+              onChange={(e) => setEditInstructions(e.target.value)}
+              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[100px]"
+              placeholder="กรอกคำชี้แจงแต่ละบรรทัด&#10;หากไม่กรอก จะใช้คำชี้แจงพื้นฐาน"
+              rows={4}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              แต่ละบรรทัดจะเป็นคำชี้แจงหนึ่งข้อ หากไม่กรอกจะใช้คำชี้แจงพื้นฐาน
+            </p>
           </div>
           
           {/* Shuffle Questions Toggle */}

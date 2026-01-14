@@ -12,6 +12,7 @@ export interface ExamSetWithStats {
   lockScreen: boolean;
   scheduledStart: string | null;
   scheduledEnd: string | null;
+  instructions: string[] | null;
   questionCount: number;
   submissionCount: number;
   questionTypeCounts: {
@@ -77,6 +78,9 @@ export async function getExamSets(): Promise<ExamSetWithStats[]> {
       lockScreen: (exam as ExamSetType & { lockScreen?: boolean }).lockScreen ?? false,
       scheduledStart: exam.scheduledStart?.toISOString() || null,
       scheduledEnd: exam.scheduledEnd?.toISOString() || null,
+      instructions: Array.isArray((exam as ExamSetType & { instructions?: any }).instructions) 
+        ? (exam as ExamSetType & { instructions?: any }).instructions as string[]
+        : null,
       questionCount: exam._count.questions,
       submissionCount: exam._count.submissions,
       questionTypeCounts,

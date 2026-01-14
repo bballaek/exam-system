@@ -30,6 +30,7 @@ interface ExamSet {
   timeLimitMinutes?: number | null;
   shuffleQuestions?: boolean;
   lockScreen?: boolean;
+  instructions?: string[] | null;
 }
 
 interface StudentInfo {
@@ -101,9 +102,6 @@ export default function PublicExamPage() {
   
   // Start exam confirmation modal
   const [showStartConfirm, setShowStartConfirm] = useState(false);
-  
-  // Countdown before starting exam
-  const [countdown, setCountdown] = useState<number | null>(null);
   
   // Execution status for CODEMSA
   const [isExecuting, setIsExecuting] = useState(false);
@@ -686,53 +684,39 @@ export default function PublicExamPage() {
                 ) : null;
               })()}
 
-              {/* Section 1: General Rules */}
-              <div className="mb-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Icon name="info" size="sm" className="text-gray-600" />
-                  กฎทั่วไป
-                </h3>
-                <ul className="space-y-2 text-gray-600 text-sm">
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">1.</span>
-                    อ่านคำถามให้ครบถ้วนก่อนเลือกคำตอบ
-                  </li>
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">2.</span>
-                    เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว
-                  </li>
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">3.</span>
-                    สามารถย้อนกลับแก้ไขคำตอบได้ก่อนส่ง
-                  </li>
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">4.</span>
-                    <span><strong className="text-red-500">ห้ามรีเฟรช</strong> หรือปิดหน้าต่างระหว่างทำข้อสอบ</span>
-                  </li>
-                </ul>
-              </div>
+              {/* Instructions */}
+              {(() => {
+                const defaultInstructions = [
+                  "อ่านคำถามให้ครบถ้วนก่อนเลือกคำตอบ",
+                  "เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว",
+                  "สามารถย้อนกลับแก้ไขคำตอบได้ก่อนส่ง",
+                  "ห้ามรีเฟรช หรือปิดหน้าต่างระหว่างทำข้อสอบ",
+                  "ใช้ปุ่ม \"ถัดไป\" และ \"ก่อนหน้า\" เพื่อเลื่อนข้อ",
+                  "สามารถเลือกข้อที่ต้องการจากแถบด้านขวา",
+                  ...(examSet.lockScreen ? ["สลับหน้าจอเกิน 3 ครั้ง ระบบจะส่งคำตอบอัตโนมัติ"] : []),
+                ];
+                
+                const instructions = Array.isArray(examSet.instructions) && examSet.instructions.length > 0
+                  ? examSet.instructions
+                  : defaultInstructions;
 
-              {/* Section 2: Navigation */}
-              <div className="mb-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Icon name="menu" size="sm" className="text-gray-600" />
-                  การนำทาง
-                </h3>
-                <ul className="space-y-2 text-gray-600 text-sm">
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">•</span>
-                    ใช้ปุ่ม "ถัดไป" และ "ก่อนหน้า" เพื่อเลื่อนข้อ
-                  </li>
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">•</span>
-                    สามารถเลือกข้อที่ต้องการจากแถบด้านขวา
-                  </li>
-                  <li className="flex gap-2 items-start">
-                    <span className="text-gray-900 font-bold">•</span>
-                    สลับหน้าจอเกิน 3 ครั้ง ระบบจะส่งคำตอบอัตโนมัติ
-                  </li>
-                </ul>
-              </div>
+                return (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Icon name="info" size="sm" className="text-gray-600" />
+                      คำชี้แจง
+                    </h3>
+                    <ul className="space-y-2 text-gray-600 text-sm">
+                      {instructions.map((instruction, index) => (
+                        <li key={index} className="flex gap-2 items-start">
+                          <span className="text-gray-900 font-bold">{index + 1}.</span>
+                          <span>{instruction}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
 
               {/* Warning */}
               <div className="rounded-lg border border-border bg-muted p-4 mb-6">
@@ -877,69 +861,47 @@ export default function PublicExamPage() {
             {showStartConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
                 <div className="rounded-xl border border-border bg-card max-w-md w-full p-6 text-center">
-                  {countdown !== null ? (
-                    // Countdown View
-                    <>
-                      <div className="w-24 h-24 rounded-full bg-gray-900 flex items-center justify-center mx-auto mb-4 animate-pulse">
-                        <span className="text-5xl font-bold text-white">{countdown}</span>
-                      </div>
-                      <h2 className="text-lg font-bold text-gray-900 mb-2">กำลังเข้าสู่ห้องสอบ...</h2>
-                      <p className="text-sm text-gray-500">เตรียมตัวให้พร้อม</p>
-                    </>
-                  ) : (
-                    // Warning View
-                    <>
-                      <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Icon name="warning" size="lg" className="text-amber-600" />
-                      </div>
-                      <h2 className="text-lg font-bold text-gray-900 mb-2">คำเตือนก่อนเริ่มสอบ</h2>
-                      <div className="text-left bg-muted rounded-lg p-4 mb-4">
-                        <ul className="space-y-2 text-sm text-gray-600">
-                          <li className="flex gap-2 items-start">
-                            <span className="text-red-500 font-bold">⚠️</span>
-                            <span><strong className="text-red-600">ห้ามสลับหน้าจอ</strong> หรือเปิดแท็บอื่นระหว่างทำข้อสอบ</span>
-                          </li>
-                          <li className="flex gap-2 items-start">
-                            <span className="text-red-500 font-bold">⚠️</span>
-                            <span>สลับหน้าจอเกิน <strong className="text-red-600">3 ครั้ง</strong> ระบบจะส่งคำตอบอัตโนมัติ</span>
-                          </li>
-                          <li className="flex gap-2 items-start">
-                            <span className="text-amber-500 font-bold">⏱️</span>
-                            <span>เมื่อกดเริ่มแล้ว เวลาจะเริ่มนับถอยหลังทันที</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="flex gap-3">
-                        <button 
-                          onClick={() => setShowStartConfirm(false)} 
-                          className="flex-1 py-3 bg-muted text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button 
-                          onClick={() => {
-                            // Start countdown
-                            setCountdown(3);
-                            let count = 3;
-                            const timer = setInterval(() => {
-                              count--;
-                              if (count <= 0) {
-                                clearInterval(timer);
-                                setShowStartConfirm(false);
-                                setCountdown(null);
-                                handleStartExam();
-                              } else {
-                                setCountdown(count);
-                              }
-                            }, 1000);
-                          }} 
-                          className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-                        >
-                          เริ่มเลย
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon name="warning" size="lg" className="text-amber-600" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-2">คำเตือนก่อนเริ่มสอบ</h2>
+                  <div className="text-left bg-muted rounded-lg p-4 mb-4">
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      {examSet.lockScreen && (
+                        <li className="flex gap-2 items-start">
+                          <span className="text-red-500 font-bold">⚠️</span>
+                          <span><strong className="text-red-600">ห้ามสลับหน้าจอ</strong> หรือเปิดแท็บอื่นระหว่างทำข้อสอบ</span>
+                        </li>
+                      )}
+                      {examSet.lockScreen && (
+                        <li className="flex gap-2 items-start">
+                          <span className="text-red-500 font-bold">⚠️</span>
+                          <span>สลับหน้าจอเกิน <strong className="text-red-600">3 ครั้ง</strong> ระบบจะส่งคำตอบอัตโนมัติ</span>
+                        </li>
+                      )}
+                      <li className="flex gap-2 items-start">
+                        <span className="text-amber-500 font-bold">⏱️</span>
+                        <span>เมื่อกดเริ่มแล้ว เวลาจะเริ่มนับถอยหลังทันที</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setShowStartConfirm(false)} 
+                      className="flex-1 py-3 bg-muted text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowStartConfirm(false);
+                        handleStartExam();
+                      }} 
+                      className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                    >
+                      เริ่มเลย
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

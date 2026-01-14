@@ -15,6 +15,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
   const [newExamTitle, setNewExamTitle] = useState("");
   const [newExamSubject, setNewExamSubject] = useState("");
   const [newExamTimeLimit, setNewExamTimeLimit] = useState<number | null>(60);
+  const [newExamInstructions, setNewExamInstructions] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const toast = useToast();
 
@@ -28,6 +29,10 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
 
     setIsCreating(true);
     try {
+      const instructionsArray = newExamInstructions.trim()
+        ? newExamInstructions.trim().split('\n').filter(line => line.trim())
+        : null;
+
       const response = await fetch("/api/exam-sets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -35,6 +40,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
           title: newExamTitle.trim(),
           subject: newExamSubject.trim() || null,
           timeLimitMinutes: newExamTimeLimit,
+          instructions: instructionsArray,
         }),
       });
 
@@ -53,6 +59,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
           lockScreen: false,
           scheduledStart: null,
           scheduledEnd: null,
+          instructions: Array.isArray(newExam.instructions) ? newExam.instructions : null,
           questionCount: 0,
           submissionCount: 0,
           questionTypeCounts: {
@@ -68,6 +75,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
         setNewExamTitle("");
         setNewExamSubject("");
         setNewExamTimeLimit(60);
+        setNewExamInstructions("");
         onClose();
       } else {
         toast.showToast("error", "เกิดข้อผิดพลาดในการสร้างชุดข้อสอบ");
@@ -135,6 +143,21 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
                 {newExamTimeLimit ? `(${Math.floor(newExamTimeLimit / 60)} ชม. ${newExamTimeLimit % 60} นาที)` : "ไม่จำกัดเวลา"}
               </span>
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              คำชี้แจง (Optional)
+            </label>
+            <textarea
+              value={newExamInstructions}
+              onChange={(e) => setNewExamInstructions(e.target.value)}
+              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[100px]"
+              placeholder="กรอกคำชี้แจงแต่ละบรรทัด&#10;หากไม่กรอก จะใช้คำชี้แจงพื้นฐาน"
+              rows={4}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              แต่ละบรรทัดจะเป็นคำชี้แจงหนึ่งข้อ หากไม่กรอกจะใช้คำชี้แจงพื้นฐาน
+            </p>
           </div>
         </div>
 
