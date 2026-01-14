@@ -29,6 +29,7 @@ interface ExamSet {
   scheduledEnd?: string | null;
   timeLimitMinutes?: number | null;
   shuffleQuestions?: boolean;
+  lockScreen?: boolean;
 }
 
 interface StudentInfo {
@@ -104,6 +105,10 @@ export default function PublicExamPage() {
   // Countdown before starting exam
   const [countdown, setCountdown] = useState<number | null>(null);
   
+  // Execution status for CODEMSA
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [execOutput, setExecOutput] = useState<{ stdout: string; stderr: string; success?: boolean } | null>(null);
+
   // Session tracking for real-time monitoring
   const sessionIdRef = useRef<string | null>(null);
 
@@ -121,12 +126,44 @@ export default function PublicExamPage() {
         if (!response.ok) throw new Error("ไม่พบชุดข้อสอบ");
         const data = await response.json();
         setExamSet(data);
-        setUserAnswers(new Array(data.questions.length).fill(null));
+
+        // --- Offline Support: Load saved progress ---
+        const savedStateKey = `exam_progress_${examId}`;
+        const savedState = localStorage.getItem(savedStateKey);
+        
+        if (savedState) {
+          try {
+            const { answers, info, step: savedStep } = JSON.parse(savedState);
+            if (answers && answers.length === data.questions.length) {
+              setUserAnswers(answers);
+            } else {
+              setUserAnswers(new Array(data.questions.length).fill(null));
+            }
+            if (info) setStudentInfo(info);
+            // Always show instructions first - don't auto-restore step
+            // This ensures users see and accept terms every time they start
+          } catch (e) {
+            console.error("Failed to parse saved state", e);
+            setUserAnswers(new Array(data.questions.length).fill(null));
+          }
+        } else {
+          setUserAnswers(new Array(data.questions.length).fill(null));
+        }
+        // Always start with instructions step to show terms
+        setStep("instructions");
+        setInstructionsAccepted(false);
+        // --- End Offline Support ---
+
         // Initialize shuffled questions
         if (data.shuffleQuestions) {
           setShuffledQuestions(shuffleArray(data.questions));
         } else {
           setShuffledQuestions(data.questions);
+        }
+        // Reset tab switch count if lockScreen is disabled
+        if (!data.lockScreen) {
+          setTabSwitchCount(0);
+          setShowWarning(false);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
@@ -137,9 +174,17 @@ export default function PublicExamPage() {
     if (examId) fetchExam();
   }, [examId]);
 
-  // Tab switch detection
+  // Reset tab switch count when lockScreen changes
   useEffect(() => {
-    if (step !== "exam" || isSubmitting) return;
+    if (!examSet?.lockScreen) {
+      setTabSwitchCount(0);
+      setShowWarning(false);
+    }
+  }, [examSet?.lockScreen]);
+
+  // Tab switch detection (only if lockScreen is enabled)
+  useEffect(() => {
+    if (step !== "exam" || isSubmitting || !examSet?.lockScreen) return;
     const handleVisibility = () => {
       if (document.hidden) {
         setTabSwitchCount((prev) => {
@@ -155,7 +200,9 @@ export default function PublicExamPage() {
           }
           
           if (newCount >= MAX_TAB_SWITCHES) {
-            toast.showToast("error", `คุณสลับหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            setTimeout(() => {
+              toast.showToast("error", `คุณสลับหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            }, 0);
             handleSubmit();
           }
           return newCount;
@@ -164,11 +211,11 @@ export default function PublicExamPage() {
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [step, isSubmitting]);
+  }, [step, isSubmitting, examSet?.lockScreen]);
 
-  // Fullscreen exit detection (desktop only)
+  // Fullscreen exit detection (desktop only, only if lockScreen is enabled)
   useEffect(() => {
-    if (step !== "exam" || isSubmitting) return;
+    if (step !== "exam" || isSubmitting || !examSet?.lockScreen) return;
     
     // Only check fullscreen on desktop (not mobile/tablet)
     const isDesktop = window.innerWidth >= 1024;
@@ -178,7 +225,9 @@ export default function PublicExamPage() {
       if (!document.fullscreenElement) {
         setTabSwitchCount((prev) => {
           const newCount = prev + 1;
-          toast.showToast("warning", `คุณออกจากโหมดเต็มหน้าจอ! (เตือนครั้งที่ ${newCount}/${MAX_TAB_SWITCHES})`);
+          setTimeout(() => {
+            toast.showToast("warning", `คุณออกจากโหมดเต็มหน้าจอ! (เตือนครั้งที่ ${newCount}/${MAX_TAB_SWITCHES})`);
+          }, 0);
           setShowWarning(true);
           
           // Update session with warning
@@ -190,7 +239,9 @@ export default function PublicExamPage() {
           }
           
           if (newCount >= MAX_TAB_SWITCHES) {
-            toast.showToast("error", `คุณออกจากโหมดเต็มหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            setTimeout(() => {
+              toast.showToast("error", `คุณออกจากโหมดเต็มหน้าจอเกิน ${MAX_TAB_SWITCHES} ครั้ง ระบบจะส่งคำตอบอัตโนมัติ`);
+            }, 0);
             handleSubmit();
           }
           return newCount;
@@ -200,7 +251,7 @@ export default function PublicExamPage() {
     
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [step, isSubmitting]);
+  }, [step, isSubmitting, examSet?.lockScreen]);
 
   // Timer - only runs if there's a time limit
   useEffect(() => {
@@ -250,6 +301,20 @@ export default function PublicExamPage() {
     return () => clearInterval(interval);
   }, [step, timeLeft]);
 
+  // --- Offline Support: Save progress whenever state changes ---
+  useEffect(() => {
+    if (!examId || !examSet || isLoading) return;
+    
+    const state = {
+      answers: userAnswers,
+      info: studentInfo,
+      step: step
+    };
+    
+    localStorage.setItem(`exam_progress_${examId}`, JSON.stringify(state));
+  }, [userAnswers, studentInfo, step, examId, examSet, isLoading]);
+  // --- End Offline Support ---
+
   const formatTime = (s: number) => `${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
   const getTimerColor = () => {
     if (!timeLeft || !examTimeSeconds) return "bg-green-500";
@@ -268,16 +333,18 @@ export default function PublicExamPage() {
       return;
     }
     
-    // Request fullscreen (desktop and iPad only, not mobile phones)
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile) {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch (err) {
-        console.warn("Fullscreen request failed:", err);
-        // Don't show F11 message on tablets
-        if (window.innerWidth >= 1024) {
-          toast.showToast("info", "ไม่สามารถเปิดโหมดเต็มหน้าจอได้ กรุณากด F11");
+    // Request fullscreen (desktop and iPad only, not mobile phones) - only if lockScreen is enabled
+    if (examSet?.lockScreen) {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (err) {
+          console.warn("Fullscreen request failed:", err);
+          // Don't show F11 message on tablets
+          if (window.innerWidth >= 1024) {
+            toast.showToast("info", "ไม่สามารถเปิดโหมดเต็มหน้าจอได้ กรุณากด F11");
+          }
         }
       }
     }
@@ -311,6 +378,41 @@ export default function PublicExamPage() {
       newAnswers[currentQuestionIndex] = answer;
       return newAnswers;
     });
+    // Reset execution output when answer changes
+    setExecOutput(null);
+  };
+
+  const handleRunCode = async (question: Question, answers: string[]) => {
+    setIsExecuting(true);
+    setExecOutput(null);
+    try {
+      // Assemble the code
+      let assembledCode = question.text;
+      question.subQuestions.forEach((subQ, i) => {
+        const val = answers[i] || "";
+        // Escape backslashes in user input to prevent regex issues if we used regex, 
+        // but here we just use split/join for simple exact match replacement
+        assembledCode = assembledCode.split(subQ).join(val);
+      });
+
+      const response = await fetch("/api/run-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: assembledCode, language: "python" }),
+      });
+      
+      const result = await response.json();
+      setExecOutput(result);
+      if (result.success) {
+        toast.showToast("success", "รันโค้ดสำเร็จ");
+      } else {
+        toast.showToast("error", "รันโค้ดผิดพลาด");
+      }
+    } catch (err) {
+      toast.showToast("error", "ไม่สามารถรันโค้ดได้");
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   const handleSubmit = useCallback(async () => {
@@ -339,6 +441,10 @@ export default function PublicExamPage() {
           await deleteExamSession(sessionIdRef.current);
         }
         
+        // --- Offline Support: Cleanup localStorage ---
+        localStorage.removeItem(`exam_progress_${examId}`);
+        // --- End Offline Support ---
+
         sessionStorage.removeItem("studentInfo");
         const fullName = `${studentInfo.firstName} ${studentInfo.lastName}`;
         const examTitle = encodeURIComponent(examSet?.title || "แบบทดสอบ");
@@ -363,13 +469,20 @@ export default function PublicExamPage() {
   const toggleSaveQuestion = (index: number) => {
     setSavedQuestions((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
+      const wasSaved = newSet.has(index);
+      if (wasSaved) {
         newSet.delete(index);
-        toast.showToast("info", `ยกเลิกบันทึกข้อ ${index + 1}`);
       } else {
         newSet.add(index);
-        toast.showToast("success", `บันทึกข้อ ${index + 1} แล้ว`);
       }
+      // Use setTimeout to call toast after state update
+      setTimeout(() => {
+        if (wasSaved) {
+          toast.showToast("info", `ยกเลิกบันทึกข้อ ${index + 1}`);
+        } else {
+          toast.showToast("success", `บันทึกข้อ ${index + 1} แล้ว`);
+        }
+      }, 0);
       return newSet;
     });
   };
@@ -855,8 +968,8 @@ export default function PublicExamPage() {
 
   return (
     <div className="min-h-screen bg-surface select-none" onContextMenu={(e) => e.preventDefault()}>
-      {/* Warning Modal */}
-      {showWarning && (
+      {/* Warning Modal - only show if lockScreen is enabled */}
+      {showWarning && examSet?.lockScreen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="rounded-xl border border-border bg-card max-w-sm w-full p-6 text-center">
             <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -877,7 +990,7 @@ export default function PublicExamPage() {
             <h1 className="text-lg font-bold text-gray-700 truncate">{examSet.title}</h1>
           </div>
           <div className="flex items-center gap-4">
-            {tabSwitchCount > 0 && (
+            {tabSwitchCount > 0 && examSet?.lockScreen && (
               <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">⚠️ {tabSwitchCount}/{MAX_TAB_SWITCHES}</span>
             )}
             <button 
@@ -956,7 +1069,6 @@ export default function PublicExamPage() {
                       </button>
                     );
                   })}
-                  
                   {currentQuestion.type === "SHORT" && (
                     <input 
                       type="text" 
@@ -966,7 +1078,7 @@ export default function PublicExamPage() {
                       placeholder="พิมพ์คำตอบ..." 
                     />
                   )}
-                  
+
                   {currentQuestion.type === "CODEMSA" && currentQuestion.subQuestions?.map((subQ, i) => {
                     const answers = (userAnswers[currentQuestionIndex] as string[]) || [];
                     return (
@@ -981,6 +1093,35 @@ export default function PublicExamPage() {
                       </div>
                     );
                   })}
+
+                  {currentQuestion.type === "CODEMSA" && (
+                    <div className="mt-4 space-y-3">
+                      <button
+                        onClick={() => handleRunCode(currentQuestion, (userAnswers[currentQuestionIndex] as string[]) || [])}
+                        disabled={isExecuting}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                      >
+                        {isExecuting ? <Icon name="spinner" size="sm" className="animate-spin" /> : <Icon name="play" size="sm" />}
+                        ทดสอบรันโค้ด
+                      </button>
+
+                      {execOutput && (
+                        <div className={`mt-3 p-4 rounded-lg font-mono text-xs border ${execOutput.success ? "bg-gray-900 border-green-500/50" : "bg-red-900/10 border-red-500/50"}`}>
+                          <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
+                            <span className={execOutput.success ? "text-green-400" : "text-red-400 font-bold"}>
+                              {execOutput.success ? "✓ Output:" : "✗ Error:"}
+                            </span>
+                            <button onClick={() => setExecOutput(null)} className="text-gray-500 hover:text-white">
+                              <Icon name="close" size="xs" />
+                            </button>
+                          </div>
+                          {execOutput.stdout && <pre className="text-gray-300 whitespace-pre-wrap">{execOutput.stdout}</pre>}
+                          {execOutput.stderr && <pre className="text-red-400 whitespace-pre-wrap mt-2">{execOutput.stderr}</pre>}
+                          {!execOutput.stdout && !execOutput.stderr && <span className="text-gray-500 italic">ไม่มี Output</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {currentQuestion.type === "TRUE_FALSE" && (
                     <div className="flex gap-4">

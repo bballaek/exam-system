@@ -43,7 +43,7 @@ export default function StudentGrouping({ groups, isLoading }: StudentGroupingPr
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center text-gray-400">
         <Icon name="users" size="lg" className="mx-auto mb-2" />
-        <p>ยังไม่มีข้อมูลนักเรียน</p>
+        <p>No students data available</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function StudentGrouping({ groups, isLoading }: StudentGroupingPr
       <div className="p-4 border-b border-border">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Icon name="users" size="sm" className="text-gray-500" />
-          การจัดกลุ่มนักเรียน
+          Student Grouping
           <span className="text-xs font-normal text-gray-400 ml-1">
             (Percentile-based: Top 27% / Middle 46% / Bottom 27%)
           </span>

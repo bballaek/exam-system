@@ -33,9 +33,10 @@ const userBottomMenuItems: MenuItem[] = [
 // Menu for admin (logged in)
 const adminMenuItems: MenuItem[] = [
   { id: "EXAM", label: "Exam", icon: "document", href: "/" },
-  { id: "SETTING", label: "Setting", icon: "settings", href: "/admin/exams" },
+  { id: "MANAGE", label: "Manage Exam", icon: "settings", href: "/admin/exams" },
   { id: "DASHBOARD", label: "Dashboard", icon: "chart", href: "/admin/dashboard" },
-  { id: "STATUS", label: "Status", icon: "eye", href: "/admin/status" },
+  { id: "LEARNERS", label: "Learners", icon: "users", href: "/admin/learners" },
+  { id: "PROGRESS", label: "Progress", icon: "eye", href: "/admin/status" },
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: SidebarProps) {
@@ -224,14 +225,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
               text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all duration-200 mt-2
               ${isCollapsed ? "justify-center" : ""}
             `}
-            title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
+            title={isCollapsed ? "Expand Menu" : "Collapse Menu"}
           >
             <Icon 
               name={isCollapsed ? "sidebar-expand" : "sidebar-collapse"} 
               size="sm" 
               className="text-gray-400" 
             />
-            {!isCollapsed && <span>ย่อเมนู</span>}
+            {!isCollapsed && <span>Expand Menu</span>}
           </button>
         </div>
       </aside>

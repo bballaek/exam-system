@@ -48,6 +48,7 @@ export async function PATCH(
         options: body.options,
         correctAnswers: body.correctAnswers,
         subQuestions: body.subQuestions,
+        isRequired: body.isRequired,
       },
     });
 

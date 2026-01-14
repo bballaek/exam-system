@@ -107,7 +107,7 @@ export default function GradeSubmissionPage() {
       if (response.ok) {
         setHasChanges(false);
         toast.showToast("success", "บันทึกคะแนนเรียบร้อยแล้ว");
-        router.push("/admin/dashboard");
+        router.back(); // Use back() to preserve filter state on Dashboard
       } else {
         throw new Error("ไม่สามารถบันทึกได้");
       }

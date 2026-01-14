@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Icon from "@/components/Icon";
 
 interface StatCardProps {
@@ -9,7 +10,7 @@ interface StatCardProps {
   color: "indigo" | "green" | "blue" | "yellow" | "red";
 }
 
-export default function StatCard({ 
+function StatCard({ 
   icon, 
   label, 
   value, 
@@ -27,3 +28,5 @@ export default function StatCard({
     </div>
   );
 }
+
+export default React.memo(StatCard);

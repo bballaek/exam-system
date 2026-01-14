@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Sarabun } from "next/font/google";
+import { IBM_Plex_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 
-const sarabun = Sarabun({
-  weight: ["400", "500", "700"],
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  weight: ["400", "500", "600", "700"],
   subsets: ["thai", "latin"],
-  variable: "--font-sarabun",
+  variable: "--font-ibm-plex-sans-thai",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${sarabun.variable} font-sans antialiased`}>
+      <body className={`${ibmPlexSansThai.variable} font-sans antialiased`}>
         <ToastProvider>
           {children}
         </ToastProvider>

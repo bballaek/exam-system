@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Icon from "@/components/Icon";
 
 interface QuestionTypeCounts {
@@ -22,7 +23,7 @@ interface ExamCardProps {
   onStart: (id: string) => void;
 }
 
-export default function ExamCard({
+function ExamCard({
   id,
   title,
   subject,
@@ -34,243 +35,174 @@ export default function ExamCard({
   isActive,
   onStart,
 }: ExamCardProps) {
-  // Tonal color system - monochromatic with varying lightness
-  const toneColors: Record<string, {
-    bg: string;
-    border: string;
-    accent: string;
-    text: string;
-    muted: string;
-    button: string;
-    buttonHover: string;
-    iconBg: string;
-  }> = {
-    math: {
-      bg: "bg-violet-50/70",
-      border: "border-violet-300",
-      accent: "bg-violet-600",
-      text: "text-violet-900",
-      muted: "text-violet-600/70",
-      button: "bg-violet-600 hover:bg-violet-700",
-      buttonHover: "group-hover:border-violet-400",
-      iconBg: "bg-violet-100",
-    },
-    science: {
-      bg: "bg-emerald-50/70",
-      border: "border-emerald-300",
-      accent: "bg-emerald-600",
-      text: "text-emerald-900",
-      muted: "text-emerald-600/70",
-      button: "bg-emerald-600 hover:bg-emerald-700",
-      buttonHover: "group-hover:border-emerald-400",
-      iconBg: "bg-emerald-100",
-    },
-    english: {
-      bg: "bg-sky-50/70",
-      border: "border-sky-300",
-      accent: "bg-sky-600",
-      text: "text-sky-900",
-      muted: "text-sky-600/70",
-      button: "bg-sky-600 hover:bg-sky-700",
-      buttonHover: "group-hover:border-sky-400",
-      iconBg: "bg-sky-100",
-    },
-    art: {
-      bg: "bg-rose-50/70",
-      border: "border-rose-300",
-      accent: "bg-rose-600",
-      text: "text-rose-900",
-      muted: "text-rose-600/70",
-      button: "bg-rose-600 hover:bg-rose-700",
-      buttonHover: "group-hover:border-rose-400",
-      iconBg: "bg-rose-100",
-    },
-    thai: {
-      bg: "bg-amber-50/70",
-      border: "border-amber-300",
-      accent: "bg-amber-600",
-      text: "text-amber-900",
-      muted: "text-amber-600/70",
-      button: "bg-amber-600 hover:bg-amber-700",
-      buttonHover: "group-hover:border-amber-400",
-      iconBg: "bg-amber-100",
-    },
-    default: {
-      bg: "bg-slate-50/70",
-      border: "border-slate-300",
-      accent: "bg-slate-600",
-      text: "text-slate-900",
-      muted: "text-slate-600/70",
-      button: "bg-slate-600 hover:bg-slate-700",
-      buttonHover: "group-hover:border-slate-400",
-      iconBg: "bg-slate-100",
-    },
-  };
-
-  const tone = toneColors[subjectColor] || toneColors.default;
+  const handleStart = React.useCallback(() => {
+    onStart(id);
+  }, [id, onStart]);
 
   return (
     <div
       className={`
         group relative overflow-hidden
-        ${tone.bg} rounded-2xl
-        border-2 ${tone.border} ${tone.buttonHover}
-        p-5
-        transition-all duration-300 ease-out
-        hover:shadow-xl hover:shadow-black/5
-        ${!isActive ? "opacity-50 grayscale" : ""}
+        bg-white
+        rounded-2xl
+        border transition-all duration-300 ease-out
+        ${isActive 
+          ? "border-indigo-200 shadow-lg hover:shadow-xl hover:shadow-indigo-200/50 hover:-translate-y-1 hover:border-indigo-300" 
+          : "border-slate-200 shadow-sm opacity-70"
+        }
       `}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        {/* Subject badge */}
-        <div className="flex items-center gap-2">
-          <span className={`w-2.5 h-2.5 rounded-full ${tone.accent}`} />
-          <span className={`text-sm font-semibold ${tone.text}`}>
-            {subject}
-          </span>
+      {/* Status indicator bar */}
+      <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-300 ${
+        isActive ? "bg-indigo-600" : "bg-slate-300"
+      }`} />
+
+      <div className="p-5 relative z-10">
+        {/* Header Section */}
+        <div className="flex items-center justify-between mb-4">
+          {/* Subject */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+            <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
+              {subject || "Exam"}
+            </span>
+          </div>
+
+          {/* Status Badge */}
+          <div className={`
+            inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold
+            transition-all duration-300
+            ${isActive 
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+              : "bg-slate-100 text-slate-500 border border-slate-200"
+            }
+          `}>
+            <span className={`
+              relative w-1.5 h-1.5 rounded-full
+              ${isActive 
+                ? "bg-emerald-500" 
+                : "bg-slate-400"
+              }
+            `} />
+            {isActive ? "Open" : "Closed"}
+          </div>
         </div>
 
-        {/* Status */}
-        <div
-          className={`
-            flex items-center gap-1.5 px-2.5 py-1 rounded-full
-            ${isActive ? `${tone.iconBg} ${tone.text}` : "bg-white/60 text-slate-400"}
-          `}
-        >
-          <span
+        {/* Title */}
+        <h3 className="text-lg font-bold text-slate-900 leading-snug line-clamp-2 mb-4 min-h-[3rem] group-hover:text-indigo-700 transition-colors duration-300">
+          {title}
+        </h3>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {/* Time */}
+          <div className="relative">
+            <div className="bg-blue-50 rounded-xl p-2.5 border border-blue-100 hover:border-blue-200 transition-all duration-300 group/stat">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-1.5 p-1.5 rounded-lg bg-white shadow-sm group-hover/stat:scale-110 transition-transform duration-300">
+                  <Icon name="clock" className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="text-lg font-bold text-slate-900 leading-none mb-0.5">{time || "∞"}</div>
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Min</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Questions */}
+          <div className="relative">
+            <div className="bg-indigo-50 rounded-xl p-2.5 border border-indigo-100 hover:border-indigo-200 transition-all duration-300 group/stat">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-1.5 p-1.5 rounded-lg bg-white shadow-sm group-hover/stat:scale-110 transition-transform duration-300">
+                  <Icon name="file-text" className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-lg font-bold text-slate-900 leading-none mb-0.5">{questionCount}</div>
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Q's</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Points */}
+          <div className="relative">
+            <div className="bg-amber-50 rounded-xl p-2.5 border border-amber-100 hover:border-amber-200 transition-all duration-300 group/stat">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-1.5 p-1.5 rounded-lg bg-white shadow-sm group-hover/stat:scale-110 transition-transform duration-300">
+                  <Icon name="star" className="w-4 h-4 text-amber-600 fill-amber-600" />
+                </div>
+                <div className="text-lg font-bold text-slate-900 leading-none mb-0.5">{totalPoints || questionCount}</div>
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Pts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Question Types */}
+        {questionTypeCounts && (questionTypeCounts.CHOICE > 0 || questionTypeCounts.SHORT > 0 || questionTypeCounts.CODEMSA > 0) && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {questionTypeCounts.CHOICE > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Choice {questionTypeCounts.CHOICE}
+              </span>
+            )}
+            {questionTypeCounts.SHORT > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Fill {questionTypeCounts.SHORT}
+              </span>
+            )}
+            {questionTypeCounts.CODEMSA > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                Code {questionTypeCounts.CODEMSA}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Action Button */}
+        {isActive ? (
+          <button
+            onClick={handleStart}
             className={`
-              w-1.5 h-1.5 rounded-full
-              ${isActive ? `${tone.accent} animate-pulse` : "bg-slate-300"}
+              w-full
+              flex items-center justify-center gap-2
+              py-3 px-4
+              bg-indigo-600
+              hover:bg-indigo-700
+              text-white font-bold text-sm
+              rounded-xl
+              transition-all duration-300
+              active:scale-[0.98]
+              shadow-lg shadow-indigo-500/30
+              hover:shadow-xl hover:shadow-indigo-500/40
+              group/btn
             `}
-          />
-          <span className="text-xs font-medium">
-            {isActive ? "เปิดสอบ" : "ปิดสอบ"}
-          </span>
-        </div>
+          >
+            <span>Start Exam</span>
+            <Icon
+              name="arrow-right"
+              className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1"
+            />
+          </button>
+        ) : (
+          <div
+            className={`
+              w-full flex items-center justify-center gap-2
+              py-3 px-4
+              bg-slate-100 text-slate-400
+              rounded-xl
+              font-bold text-sm
+              cursor-not-allowed
+              border-2 border-dashed border-slate-200
+            `}
+          >
+            <Icon name="lock" className="w-4 h-4" />
+            <span>Closed</span>
+          </div>
+        )}
       </div>
-
-      {/* Title */}
-      <h3 className={`text-lg font-bold ${tone.text} leading-snug line-clamp-2 mb-4`}>
-        {title}
-      </h3>
-
-      {/* Stats */}
-      <div className="flex items-center gap-2 mb-5">
-        <div
-          className={`
-            flex-1 flex items-center gap-2
-            ${tone.iconBg} rounded-xl px-2.5 py-2
-          `}
-        >
-          <Icon name="clock" className={`w-3.5 h-3.5 ${tone.muted}`} />
-          <div className="flex flex-col">
-            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
-              เวลา
-            </span>
-            <span className={`text-xs font-semibold ${tone.text}`}>
-              {time ? `${time} นาที` : "∞"}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`
-            flex-1 flex items-center gap-2
-            ${tone.iconBg} rounded-xl px-2.5 py-2
-          `}
-        >
-          <Icon name="file-text" className={`w-3.5 h-3.5 ${tone.muted}`} />
-          <div className="flex flex-col">
-            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
-              จำนวน
-            </span>
-            <span className={`text-xs font-semibold ${tone.text}`}>
-              {questionCount} ข้อ
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`
-            flex-1 flex items-center gap-2
-            ${tone.iconBg} rounded-xl px-2.5 py-2
-          `}
-        >
-          <Icon name="star" className={`w-3.5 h-3.5 ${tone.muted}`} />
-          <div className="flex flex-col">
-            <span className={`text-[9px] uppercase tracking-wide ${tone.muted}`}>
-              คะแนน
-            </span>
-            <span className={`text-xs font-semibold ${tone.text}`}>
-              {totalPoints || questionCount} คะแนน
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Question Types Breakdown */}
-      {questionTypeCounts && (questionTypeCounts.CHOICE > 0 || questionTypeCounts.SHORT > 0 || questionTypeCounts.CODEMSA > 0) && (
-        <div className={`flex flex-wrap gap-2 mb-5 ${tone.muted}`}>
-          {questionTypeCounts.CHOICE > 0 && (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              ปรนัย {questionTypeCounts.CHOICE}
-            </span>
-          )}
-          {questionTypeCounts.SHORT > 0 && (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              เติมคำตอบ {questionTypeCounts.SHORT}
-            </span>
-          )}
-          {questionTypeCounts.CODEMSA > 0 && (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tone.iconBg} ${tone.text}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-              โค้ด {questionTypeCounts.CODEMSA}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Action Button */}
-      {isActive ? (
-        <button
-          onClick={() => onStart(id)}
-          className={`
-            w-full flex items-center justify-center gap-2
-            py-3 px-4
-            ${tone.button} text-white
-            rounded-xl
-            font-semibold text-sm
-            transition-all duration-200
-            active:scale-[0.98]
-            shadow-lg shadow-black/10
-            group/btn
-          `}
-        >
-          <span>เริ่มทำข้อสอบ</span>
-          <Icon
-            name="arrow-right"
-            className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5"
-          />
-        </button>
-      ) : (
-        <div
-          className={`
-            w-full flex items-center justify-center gap-2
-            py-3 px-4
-            bg-white/50 border-2 border-dashed ${tone.border}
-            ${tone.muted}
-            rounded-xl
-            font-medium text-sm
-            cursor-not-allowed
-          `}
-        >
-          <Icon name="lock" className="w-4 h-4" />
-          <span>ปิด</span>
-        </div>
-      )}
     </div>
   );
 }
+
+export default React.memo(ExamCard);

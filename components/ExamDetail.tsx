@@ -36,7 +36,7 @@ export default function ExamDetail({ exam, onBack, onStart }: ExamDetailProps) {
         className="mb-6 flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors font-medium"
       >
         <Icon name="arrow-left" size="sm" />
-        กลับไปหน้ารายการ
+        Back
       </button>
 
       <div className="bg-[var(--color-bg-light)] rounded-3xl shadow-lg border border-[var(--color-border)] overflow-hidden">
@@ -62,14 +62,14 @@ export default function ExamDetail({ exam, onBack, onStart }: ExamDetailProps) {
               <Icon name="clock" size="md" className="text-[var(--color-primary)]" />
             </div>
             <span className="text-3xl font-bold text-[var(--color-text)]">{exam.durationMinutes}</span>
-            <span className="text-sm text-[var(--color-text-muted)] uppercase tracking-wide font-medium">นาที</span>
+            <span className="text-sm text-[var(--color-text-muted)] uppercase tracking-wide font-medium">Minutes</span>
           </div>
           <div className="p-6 flex flex-col items-center justify-center text-center hover:bg-[var(--color-bg)] transition-colors">
             <div className="w-12 h-12 bg-[var(--color-primary-lighter)] rounded-full flex items-center justify-center mb-3">
               <Icon name="document" size="md" className="text-[var(--color-primary)]" />
             </div>
             <span className="text-3xl font-bold text-[var(--color-text)]">{exam.questionCount}</span>
-            <span className="text-sm text-[var(--color-text-muted)] uppercase tracking-wide font-medium">ข้อ</span>
+            <span className="text-sm text-[var(--color-text-muted)] uppercase tracking-wide font-medium">Questions</span>
           </div>
         </div>
 
@@ -79,7 +79,7 @@ export default function ExamDetail({ exam, onBack, onStart }: ExamDetailProps) {
           <div>
             <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] mb-4">
               <Icon name="info" size="sm" className="text-[var(--color-primary)]" />
-              คำชี้แจง
+              Instructions
             </h3>
             <div className="bg-[var(--color-bg)] rounded-2xl p-6 border border-[var(--color-border-light)]">
               <ul className="space-y-3">
@@ -138,11 +138,11 @@ export default function ExamDetail({ exam, onBack, onStart }: ExamDetailProps) {
             {isLoading ? (
               <>
                 <Icon name="spinner" size="md" />
-                กำลังเตรียมชุดข้อสอบ...
+                Preparing exam...
               </>
             ) : (
               <>
-                เริ่มทำแบบทดสอบ
+                Start Exam
                 <Icon name="arrow-right" size="md" />
               </>
             )}

@@ -64,6 +64,9 @@ export async function PATCH(
     if (body.shuffleQuestions !== undefined) {
       updateData.shuffleQuestions = body.shuffleQuestions;
     }
+    if (body.lockScreen !== undefined) {
+      updateData.lockScreen = body.lockScreen;
+    }
 
     const examSet = await prisma.examSet.update({
       where: { id },
@@ -75,8 +78,14 @@ export async function PATCH(
     console.error("Error updating exam set:", error);
     // Return detailed error for debugging
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorCode = (error as any)?.code;
+    const meta = (error as any)?.meta;
+    
+    // Log full error for debugging
+    console.error("Full error details:", { errorCode, errorMessage, meta, error });
+    
     return NextResponse.json(
-      { error: "Failed to update exam set", details: errorMessage },
+      { error: "Failed to update exam set", details: errorMessage, code: errorCode },
       { status: 500 }
     );
   }

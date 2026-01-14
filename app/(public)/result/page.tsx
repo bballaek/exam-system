@@ -9,9 +9,11 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const score = parseInt(searchParams.get("score") || "0", 10);
   const totalPoints = parseInt(searchParams.get("totalPoints") || "100", 10);
-  const studentName = searchParams.get("name") || "ผู้สอบ";
+  const studentName = searchParams.get("name") || "Student";
   const examId = searchParams.get("examId") || "";
-  const examTitle = searchParams.get("examTitle") || "แบบทดสอบ";
+  const examTitle = searchParams.get("examTitle") || "Exam";
+  const timeRemaining = searchParams.get("timeRemaining") || ""; // Format: "00:05:15" or seconds
+  const examDate = searchParams.get("examDate") || new Date().toISOString();
   const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
 
   // Email modal state
@@ -21,18 +23,51 @@ function ResultContent() {
   const [emailSent, setEmailSent] = useState(false);
 
   const getGradeInfo = () => {
-    if (percentage >= 80) return { grade: "ดีเยี่ยม", color: "text-green-600", bgColor: "bg-green-500" };
-    if (percentage >= 60) return { grade: "ผ่าน", color: "text-blue-600", bgColor: "bg-blue-500" };
-    if (percentage >= 40) return { grade: "พอใช้", color: "text-yellow-600", bgColor: "bg-yellow-500" };
-    return { grade: "ไม่ผ่าน", color: "text-red-600", bgColor: "bg-red-500" };
+    if (percentage >= 80) return { grade: "Excellent", color: "text-green-600", bgColor: "bg-green-500" };
+    if (percentage >= 60) return { grade: "Pass", color: "text-blue-600", bgColor: "bg-blue-500" };
+    if (percentage >= 40) return { grade: "Fair", color: "text-yellow-600", bgColor: "bg-yellow-500" };
+    return { grade: "Fail", color: "text-red-600", bgColor: "bg-red-500" };
   };
+
+  // Format time remaining
+  const formatTimeRemaining = (time: string) => {
+    if (!time) return null;
+    // If it's already formatted as HH:MM:SS
+    if (time.includes(":")) return time;
+    // If it's seconds, convert to HH:MM:SS
+    const seconds = parseInt(time, 10);
+    if (isNaN(seconds)) return null;
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Format exam date
+  const formatExamDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "2-digit", 
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formattedTime = formatTimeRemaining(timeRemaining);
+  const formattedDate = formatExamDate(examDate);
 
   const gradeInfo = getGradeInfo();
   const currentYear = new Date().getFullYear();
 
   const handleSendEmail = async () => {
     if (!email.trim() || !email.includes("@")) {
-      alert("กรุณากรอกอีเมลที่ถูกต้อง");
+      alert("Please enter a valid email address");
       return;
     }
 
@@ -60,11 +95,11 @@ function ResultContent() {
           setEmail("");
         }, 2000);
       } else {
-        alert("ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่");
+        alert("Failed to send email. Please try again.");
       }
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+      alert("An error occurred. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -81,16 +116,45 @@ function ResultContent() {
               <Icon name="check-circle" size="sm" className="text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">ส่งคำตอบเรียบร้อย</h2>
-              <p className="text-sm text-gray-500">ผลการสอบของคุณ</p>
+              <h2 className="text-xl font-bold text-gray-900">Submitted Successfully</h2>
+              <p className="text-sm text-gray-500">Your exam results</p>
             </div>
           </div>
           
           {/* Content */}
           <div className="p-6">
+            {/* Exam Info Bar */}
+            <div className="mb-6 p-4 rounded-xl border border-border bg-gray-50">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                {/* Exam Date */}
+                <div>
+                  <div className="text-xs text-gray-500 font-medium">You started this exam:</div>
+                  <div className="text-sm font-semibold text-gray-800">{formattedDate}</div>
+                </div>
+                
+                {/* Time Remaining */}
+                {formattedTime && (
+                  <div className="flex items-center gap-2">
+                    <Icon name="clock" size="sm" className="text-gray-400" />
+                    <span className="text-sm text-gray-500">Time left:</span>
+                    <div className="flex items-center gap-1">
+                      {formattedTime.split(":").map((unit, idx) => (
+                        <span key={idx} className="flex items-center">
+                          <span className="px-2 py-1 bg-gray-900 text-white text-sm font-mono rounded">
+                            {unit}
+                          </span>
+                          {idx < 2 && <span className="text-gray-400 mx-0.5">:</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Student Info */}
             <div className="mb-6 p-4 rounded-xl border border-border bg-muted">
-              <div className="text-xs text-gray-500 font-medium mb-1">ผู้สอบ</div>
+              <div className="text-xs text-gray-500 font-medium mb-1">Student</div>
               <div className="text-lg font-bold text-gray-900">{studentName}</div>
             </div>
 
@@ -100,13 +164,13 @@ function ResultContent() {
                 <span className={`text-5xl font-bold ${gradeInfo.color}`}>{score}</span>
                 <span className="text-2xl text-gray-400"> / {totalPoints}</span>
               </div>
-              <div className="text-sm text-gray-500">คะแนนที่ได้</div>
+              <div className="text-sm text-gray-500">Score</div>
             </div>
 
             {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex justify-between text-xs font-medium text-gray-500 mb-2">
-                <span>ความสำเร็จ</span>
+                <span>Progress</span>
                 <span>{percentage}%</span>
               </div>
               <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden border border-border">
@@ -124,7 +188,7 @@ function ResultContent() {
 
             {/* Divider */}
             <div className="pt-4 border-t border-border">
-              <p className="text-center text-sm text-gray-400 mb-4">ขอบคุณที่ทำแบบทดสอบ</p>
+              <p className="text-center text-sm text-gray-400 mb-4">Thank you for taking the exam</p>
               
               {/* Action Buttons */}
               <div className="space-y-3">
@@ -144,7 +208,7 @@ function ResultContent() {
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     <Icon name="refresh" size="sm" />
-                    สอบอีกครั้ง
+                    Retake Exam
                   </Link>
                 )}
 
@@ -154,8 +218,8 @@ function ResultContent() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   <Icon name="home" size="sm" />
-                  กลับหน้าแรก
-                </Link>
+                    Back to Home
+                  </Link>
               </div>
             </div>
           </div>

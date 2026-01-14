@@ -91,12 +91,12 @@ export default function DashboardFilters({
   }, []);
 
   const sortOptions = [
-    { value: "date-desc", label: "วันที่ล่าสุด" },
-    { value: "date-asc", label: "วันที่เก่าสุด" },
-    { value: "score-desc", label: "คะแนนสูง → ต่ำ" },
-    { value: "score-asc", label: "คะแนนต่ำ → สูง" },
-    { value: "name-asc", label: "ชื่อ ก → ฮ" },
-    { value: "name-desc", label: "ชื่อ ฮ → ก" },
+    { value: "date-desc", label: "Newest" },
+    { value: "date-asc", label: "Oldest" },
+    { value: "score-desc", label: "Score High → Low" },
+    { value: "score-asc", label: "Score Low → High" },
+    { value: "name-asc", label: "A → Z" },
+    { value: "name-desc", label: "Z → A" },
   ];
 
   const selectedExam = examSets.find(e => e.id === selectedExamSetId);
@@ -118,14 +118,14 @@ export default function DashboardFilters({
           }`}
         >
           <Icon name="document" size="sm" />
-          {selectedExam ? selectedExam.title : "ทุกชุดข้อสอบ"}
+          {selectedExam ? selectedExam.title : "All"}
           <Icon name="chevron-down" size="xs" className="ml-1" />
         </button>
         
         {showExamDropdown && (
           <div className="absolute left-0 top-full mt-1 w-64 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-xs font-semibold text-gray-500 uppercase">เลือกชุดข้อสอบ</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase">Select</p>
             </div>
             <div className="py-1 max-h-60 overflow-y-auto">
               <button
@@ -150,7 +150,7 @@ export default function DashboardFilters({
                   <span className="w-4">{selectedExamSetId === exam.id && <CheckIcon />}</span>
                   <span className="flex-1 truncate">{exam.title}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${exam.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                    {exam.isActive ? "เปิด" : "ปิด"}
+                    {exam.isActive ? "Open" : "Close"}
                   </span>
                 </button>
               ))}
@@ -181,7 +181,7 @@ export default function DashboardFilters({
         {showFilterDropdown && (
           <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-xs font-semibold text-gray-500 uppercase">Filter by ห้อง</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase">Filter by Classroom</p>
             </div>
             <div className="py-1">
               <button
@@ -192,7 +192,7 @@ export default function DashboardFilters({
                 className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
               >
                 <span className="w-4">{selectedClassroom === "" && <CheckIcon />}</span>
-                ทุกห้อง
+                All
               </button>
               {classrooms.map((room) => (
                 <button
@@ -259,7 +259,7 @@ export default function DashboardFilters({
         onClick={onRefresh}
         disabled={isLoading}
         className="p-2 border border-border rounded-lg bg-card hover:bg-muted transition-colors disabled:opacity-50"
-        title="รีเฟรช"
+        title="Refresh"
       >
         <Icon name={isLoading ? "spinner" : "refresh"} size="sm" className="text-gray-500" />
       </button>
@@ -270,7 +270,7 @@ export default function DashboardFilters({
         className="flex items-center gap-1.5 px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
       >
         <Icon name="settings" size="sm" />
-        <span className="hidden sm:inline">จัดการ</span>
+        <span className="hidden sm:inline">Manage</span>
       </Link>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useMemo } from "react";
 import Icon from "@/components/Icon";
 
 interface BoxPlotData {
@@ -16,22 +17,29 @@ interface BoxPlotChartProps {
   title?: string;
 }
 
-export default function BoxPlotChart({ data, title = "Box Plot (คะแนน %)" }: BoxPlotChartProps) {
-  // Normalize values to percentages for display (0-100 scale)
-  const scale = (value: number, min: number, max: number) => {
-    if (max === min) return 50;
-    return ((value - min) / (max - min)) * 100;
-  };
+function BoxPlotChart({ data, title = "Box Plot (คะแนน %)" }: BoxPlotChartProps) {
+  // Memoize calculations
+  const plotData = useMemo(() => {
+    // Normalize values to percentages for display (0-100 scale)
+    const scale = (value: number, min: number, max: number) => {
+      if (max === min) return 50;
+      return ((value - min) / (max - min)) * 100;
+    };
 
-  const displayMin = Math.max(0, data.min - 5);
-  const displayMax = Math.min(100, data.max + 5);
+    const displayMin = Math.max(0, data.min - 5);
+    const displayMax = Math.min(100, data.max + 5);
 
-  const minPos = scale(data.min, displayMin, displayMax);
-  const q1Pos = scale(data.q1, displayMin, displayMax);
-  const medianPos = scale(data.median, displayMin, displayMax);
-  const q3Pos = scale(data.q3, displayMin, displayMax);
-  const maxPos = scale(data.max, displayMin, displayMax);
-  const meanPos = scale(data.mean, displayMin, displayMax);
+    return {
+      minPos: scale(data.min, displayMin, displayMax),
+      q1Pos: scale(data.q1, displayMin, displayMax),
+      medianPos: scale(data.median, displayMin, displayMax),
+      q3Pos: scale(data.q3, displayMin, displayMax),
+      maxPos: scale(data.max, displayMin, displayMax),
+      meanPos: scale(data.mean, displayMin, displayMax),
+      displayMin,
+      displayMax,
+    };
+  }, [data]);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -44,8 +52,8 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
       <div className="relative h-32 my-6">
         {/* Scale labels */}
         <div className="absolute top-0 left-0 right-0 flex justify-between text-xs text-gray-400 mb-2">
-          <span>{displayMin.toFixed(0)}%</span>
-          <span>{displayMax.toFixed(0)}%</span>
+          <span>{plotData.displayMin.toFixed(0)}%</span>
+          <span>{plotData.displayMax.toFixed(0)}%</span>
         </div>
 
         {/* Box Plot SVG */}
@@ -53,18 +61,18 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
           <svg width="100%" height="100%" className="overflow-visible">
             {/* Min-Q1 Whisker */}
             <line
-              x1={`${minPos}%`}
+              x1={`${plotData.minPos}%`}
               y1="50%"
-              x2={`${q1Pos}%`}
+              x2={`${plotData.q1Pos}%`}
               y2="50%"
               stroke="#9ca3af"
               strokeWidth="2"
             />
             {/* Min cap */}
             <line
-              x1={`${minPos}%`}
+              x1={`${plotData.minPos}%`}
               y1="35%"
-              x2={`${minPos}%`}
+              x2={`${plotData.minPos}%`}
               y2="65%"
               stroke="#9ca3af"
               strokeWidth="2"
@@ -72,9 +80,9 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
 
             {/* Box (Q1 to Q3) */}
             <rect
-              x={`${q1Pos}%`}
+              x={`${plotData.q1Pos}%`}
               y="20%"
-              width={`${q3Pos - q1Pos}%`}
+              width={`${plotData.q3Pos - plotData.q1Pos}%`}
               height="60%"
               fill="#e0e7ff"
               stroke="#6366f1"
@@ -84,9 +92,9 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
 
             {/* Median line */}
             <line
-              x1={`${medianPos}%`}
+              x1={`${plotData.medianPos}%`}
               y1="20%"
-              x2={`${medianPos}%`}
+              x2={`${plotData.medianPos}%`}
               y2="80%"
               stroke="#4f46e5"
               strokeWidth="3"
@@ -94,26 +102,26 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
 
             {/* Mean marker (diamond) */}
             <polygon
-              points={`${meanPos},30 ${parseFloat(String(meanPos)) + 1.5},50 ${meanPos},70 ${parseFloat(String(meanPos)) - 1.5},50`}
+              points={`${plotData.meanPos},30 ${plotData.meanPos + 1.5},50 ${plotData.meanPos},70 ${plotData.meanPos - 1.5},50`}
               fill="#f97316"
               transform={`translate(0, 0)`}
-              style={{ transformOrigin: `${meanPos}% 50%` }}
+              style={{ transformOrigin: `${plotData.meanPos}% 50%` }}
             />
 
             {/* Q3-Max Whisker */}
             <line
-              x1={`${q3Pos}%`}
+              x1={`${plotData.q3Pos}%`}
               y1="50%"
-              x2={`${maxPos}%`}
+              x2={`${plotData.maxPos}%`}
               y2="50%"
               stroke="#9ca3af"
               strokeWidth="2"
             />
             {/* Max cap */}
             <line
-              x1={`${maxPos}%`}
+              x1={`${plotData.maxPos}%`}
               y1="35%"
-              x2={`${maxPos}%`}
+              x2={`${plotData.maxPos}%`}
               y2="65%"
               stroke="#9ca3af"
               strokeWidth="2"
@@ -168,3 +176,5 @@ export default function BoxPlotChart({ data, title = "Box Plot (คะแนน 
     </div>
   );
 }
+
+export default React.memo(BoxPlotChart);

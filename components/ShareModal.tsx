@@ -107,7 +107,7 @@ export default function ShareModal({
               <Icon name="share" size="md" className="text-gray-600" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-gray-900">แชร์ข้อสอบ</h2>
+              <h2 className="font-bold text-lg text-gray-900">Share Exam</h2>
               <p className="text-sm text-gray-500 truncate max-w-[200px]">{examTitle}</p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function ShareModal({
           {/* Link */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ลิงก์เข้าสอบ
+              Exam Link
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -142,7 +142,7 @@ export default function ShareModal({
                 }`}
               >
                 <Icon name={copied ? "check-circle" : "copy"} size="sm" />
-                {copied ? "คัดลอกแล้ว!" : "คัดลอก"}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function ShareModal({
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Icon name="clock" size="sm" className="text-gray-400" />
-              กำหนดเวลาเปิด/ปิดลิงก์
+              Set Exam Schedule
             </label>
             
             <div className="flex items-center gap-2 mb-4">
@@ -163,7 +163,7 @@ export default function ShareModal({
                     : "bg-muted text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                เปิดตลอด
+                Always Open
               </button>
               <button
                 onClick={() => setUseSchedule(true)}
@@ -173,14 +173,14 @@ export default function ShareModal({
                     : "bg-muted text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                กำหนดเวลา
+                Set Schedule
               </button>
             </div>
 
             {useSchedule && (
               <div className="space-y-3 bg-muted rounded-lg p-4">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">เวลาเปิดลิงก์</label>
+                  <label className="block text-xs text-gray-500 mb-1">Open Link Time</label>
                   <input
                     type="datetime-local"
                     value={scheduledStart}
@@ -189,7 +189,7 @@ export default function ShareModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">เวลาปิดลิงก์</label>
+                  <label className="block text-xs text-gray-500 mb-1">Close Link Time</label>
                   <input
                     type="datetime-local"
                     value={scheduledEnd}
@@ -197,7 +197,7 @@ export default function ShareModal({
                     className="w-full px-3 py-2 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
-                <p className="text-xs text-gray-400">นักเรียนจะเข้าได้เฉพาะช่วงเวลาที่กำหนดเท่านั้น</p>
+                <p className="text-xs text-gray-400">Students will only be able to access the exam during the scheduled time.</p>
               </div>
             )}
           </div>
@@ -220,12 +220,12 @@ export default function ShareModal({
               {isSaving ? (
                 <>
                   <Icon name="spinner" size="sm" />
-                  กำลังบันทึก...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Icon name="check-circle" size="sm" />
-                  บันทึก
+                  Save
                 </>
               )}
             </button>

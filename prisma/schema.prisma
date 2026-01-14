@@ -24,9 +24,14 @@ model ExamSet {
   scheduledEnd     DateTime?  // เวลาปิดสอบ
   timeLimitMinutes Int?       // จำกัดเวลาทำ (นาที)
   shuffleQuestions Boolean @default(false) // สลับลำดับข้อสอบให้แต่ละคนไม่เหมือนกัน
+  lockScreen       Boolean @default(false) // ล็อกหน้าจอระหว่างทำข้อสอบ
   
   questions   Question[]
   submissions ExamSubmission[]
+
+  // Indexes for performance
+  @@index([isActive, createdAt])
+  @@index([subject])
 }
 
 // 2. ตารางตัวข้อสอบ
@@ -35,6 +40,7 @@ model Question {
   text           String   // โจทย์
   type           String   // 'CHOICE', 'SHORT', 'CODEMSA'
   points         Int      @default(1)
+  isRequired     Boolean  @default(true)  // คำถามบังคับตอบหรือไม่
   
   options        String[] // ตัวเลือก (ถ้ามี)
   correctAnswers String[] // เฉลย
@@ -42,6 +48,9 @@ model Question {
   
   examSetId      String
   examSet        ExamSet  @relation(fields: [examSetId], references: [id])
+
+  // Indexes for performance
+  @@index([examSetId, type])
 }
 
 // 3. ตารางการส่งคำตอบของนักเรียน
@@ -59,6 +68,11 @@ model ExamSubmission {
   examSet       ExamSet  @relation(fields: [examSetId], references: [id])
   
   answers       StudentAnswer[]
+
+  // Indexes for performance
+  @@index([examSetId, submittedAt])
+  @@index([classroom])
+  @@index([studentId])
 }
 
 // 4. ตารางเก็บรายละเอียดคำตอบแต่ละข้อ (เผื่อมาดูย้อนหลัง)
@@ -80,4 +94,7 @@ model StudentAnswer {
   isManualGraded Boolean  @default(false)
   gradedBy       String?  // ครูที่ตรวจ
   gradedAt       DateTime? // เวลาที่ตรวจ
+
+  // Indexes for performance
+  @@index([submissionId, questionId])
 }

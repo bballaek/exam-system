@@ -103,8 +103,8 @@ export function DashboardSkeleton() {
 
 export function EmptyState({
   icon = "folder",
-  title = "ไม่มีข้อมูล",
-  description = "ยังไม่มีข้อมูลในขณะนี้",
+  title = "No Data",
+  description = "No data available at the moment",
   action,
 }: {
   icon?: string;

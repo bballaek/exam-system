@@ -54,6 +54,7 @@ export async function GET() {
         createdAt: exam.createdAt.toISOString(),
         timeLimitMinutes: exam.timeLimitMinutes,
         shuffleQuestions: (exam as ExamSetType & { shuffleQuestions?: boolean }).shuffleQuestions ?? false,
+        lockScreen: (exam as ExamSetType & { lockScreen?: boolean }).lockScreen ?? false,
         scheduledStart: exam.scheduledStart?.toISOString() || null,
         scheduledEnd: exam.scheduledEnd?.toISOString() || null,
         questionCount: exam._count.questions,
@@ -67,6 +68,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       examSets: formattedExamSets
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59',
+      },
     });
 
   } catch (error) {

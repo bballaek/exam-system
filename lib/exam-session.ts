@@ -31,7 +31,7 @@ export async function createExamSession(session: Omit<ExamSession, "id" | "start
     .single();
 
   if (error) {
-    console.error("Error creating exam session:", error);
+    console.error("Error creating exam session:", error.message, error.code, error.details);
     return null;
   }
 

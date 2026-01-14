@@ -115,7 +115,7 @@
   --font-display: "Phudu", serif;
   --font-body: "Outfit", sans-serif;
   --font-thai: "Kanit", sans-serif;
-  --font-sarabun: var(--font-sarabun), "Sarabun", sans-serif;
+  --font-ibm-plex-sans-thai: var(--font-ibm-plex-sans-thai), "IBM Plex Sans Thai", sans-serif;
 
   /* ============================================
      📏 SPACING
@@ -244,10 +244,10 @@
 }
 
 /* ===== Tailwind Theme Integration ===== */
-@theme inline {
+:root {
   --color-background: var(--color-bg);
   --color-foreground: var(--color-text);
-  --font-sans: var(--font-sarabun);
+  --font-sans: var(--font-ibm-plex-sans-thai);
   
   --color-primary: var(--color-primary);
   --color-secondary: var(--color-secondary);
@@ -300,7 +300,7 @@
 body {
   background: var(--bg-surface);
   color: var(--color-text-light);
-  font-family: var(--font-sarabun);
+  font-family: var(--font-ibm-plex-sans-thai);
   font-size: var(--text-base);
   line-height: var(--text-base--line-height);
 }

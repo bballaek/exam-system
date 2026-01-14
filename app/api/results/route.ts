@@ -46,6 +46,10 @@ export async function GET(request: NextRequest) {
       success: true,
       submissions: formattedSubmissions,
       total: formattedSubmissions.length
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
+      },
     });
 
   } catch (error) {

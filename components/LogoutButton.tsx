@@ -23,10 +23,10 @@ export default function LogoutButton({ className = "", showText = true }: Logout
     <button
       onClick={handleLogout}
       className={`flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors ${className}`}
-      title="ออกจากระบบ"
+      title="Logout"
     >
       <Icon name="arrow-left" size="sm" />
-      {showText && <span>ออกจากระบบ</span>}
+      {showText && <span>Logout</span>}
     </button>
   );
 }

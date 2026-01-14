@@ -72,7 +72,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
           <div>
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Icon name="chart" size="sm" className="text-indigo-600" />
-              วิเคราะห์รายข้อ
+              Question Analysis
             </h2>
             {data && (
               <p className="text-sm text-gray-500 mt-1">{data.examTitle}</p>
@@ -98,7 +98,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
                 onClick={fetchAnalytics}
                 className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm"
               >
-                ลองใหม่
+                Try again
               </button>
             </div>
           ) : data ? (
@@ -107,15 +107,15 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
               <div className="grid grid-cols-3 gap-2 md:gap-4">
                 <div className="bg-indigo-50 rounded-lg p-2 md:p-4 text-center">
                   <p className="text-lg md:text-2xl font-bold text-indigo-600">{data.totalSubmissions}</p>
-                  <p className="text-xs md:text-sm text-gray-600">ผู้เข้าสอบ</p>
+                  <p className="text-xs md:text-sm text-gray-600">Students</p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-2 md:p-4 text-center">
                   <p className="text-lg md:text-2xl font-bold text-green-600">{data.avgScore}</p>
-                  <p className="text-xs md:text-sm text-gray-600">คะแนนเฉลี่ย</p>
+                  <p className="text-xs md:text-sm text-gray-600">Average Score</p>
                 </div>
                 <div className="bg-blue-50 rounded-lg p-2 md:p-4 text-center">
                   <p className="text-lg md:text-2xl font-bold text-blue-600">{data.avgPercentage}%</p>
-                  <p className="text-xs md:text-sm text-gray-600">เฉลี่ย %</p>
+                  <p className="text-xs md:text-sm text-gray-600">Average %</p>
                 </div>
               </div>
 
@@ -123,7 +123,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
               {data.totalSubmissions === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   <Icon name="chart" size="xl" className="mx-auto mb-3" />
-                  <p>ยังไม่มีผู้สอบ ไม่สามารถวิเคราะห์ได้</p>
+                  <p>No students have taken the exam yet</p>
                 </div>
               ) : (
                 <>
@@ -160,7 +160,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
                                 {index + 1}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-600 max-w-[300px] truncate">
-                                {q.text || "ไม่มีข้อความ"}
+                                {q.text || "No question text"}
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`inline-block px-2 py-0.5 rounded text-xs ${
@@ -203,7 +203,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <h4 className="font-medium text-amber-800 mb-2 flex items-center gap-2">
                       <Icon name="info" size="sm" />
-                      ข้อเสนอแนะ
+                      Tips
                     </h4>
                     <ul className="text-sm text-amber-700 space-y-1">
                       {data.questionAnalytics.filter(q => q.difficulty === "hard").length > 0 && (
@@ -229,7 +229,7 @@ export default function QuestionAnalysis({ examSetId, isOpen, onClose }: Questio
             onClick={onClose}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
           >
-            ปิด
+            Close
           </button>
         </div>
       </div>

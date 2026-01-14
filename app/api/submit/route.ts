@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
+
+const execAsync = promisify(exec);
 
 interface StudentInfo {
   firstName: string;
@@ -34,6 +41,29 @@ function arraysMatch(userAnswers: string[], correctAnswers: string[]): boolean {
     const userAnswer = userAnswers[index] || '';
     return normalizeAnswer(userAnswer) === normalizeAnswer(correct);
   });
+}
+
+// Sandbox execution helper for auto-grading
+async function runPythonCode(code: string): Promise<{ stdout: string; stderr: string; success: boolean }> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'grade-run-'));
+  const tempFile = path.join(tempDir, 'solution.py');
+  await fs.writeFile(tempFile, code);
+
+  try {
+    const { stdout, stderr } = await execAsync(`python3 "${tempFile}"`, {
+      timeout: 3000,
+      maxBuffer: 512 * 1024,
+    });
+    return { stdout: stdout.trim(), stderr: stderr.trim(), success: true };
+  } catch (error: any) {
+    return { 
+      stdout: (error.stdout || '').trim(), 
+      stderr: (error.stderr || error.message).trim(), 
+      success: false 
+    };
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 // POST: Submit exam answers and grade
@@ -99,9 +129,36 @@ export async function POST(request: NextRequest) {
       let isCorrect = false;
 
       if (question.type === 'CODEMSA') {
-        // CODEMSA: User answer is an array, compare all elements
-        if (Array.isArray(userAnswer) && correctAnswers.length > 0) {
-          isCorrect = arraysMatch(userAnswer, correctAnswers);
+        // CODEMSA: Check if we can use sandbox
+        if (Array.isArray(userAnswer) && question.subQuestions.length > 0) {
+          // 1. Try String matching first (fast)
+          isCorrect = arraysMatch(userAnswer, question.correctAnswers);
+          
+          // 2. If string match fails, try Sandbox execution (Golden Output comparison)
+          if (!isCorrect) {
+            // Assemble student code
+            let studentCode = question.text;
+            question.subQuestions.forEach((subQ, idx) => {
+              studentCode = studentCode.split(subQ).join(String(userAnswer[idx] || ''));
+            });
+
+            // Assemble golden code (using correctAnswers)
+            let goldenCode = question.text;
+            question.subQuestions.forEach((subQ, idx) => {
+              goldenCode = goldenCode.split(subQ).join(String(question.correctAnswers[idx] || ''));
+            });
+
+            // Run both
+            const [studentRes, goldenRes] = await Promise.all([
+              runPythonCode(studentCode),
+              runPythonCode(goldenCode)
+            ]);
+
+            // If both succeed and outputs match, it's correct!
+            if (studentRes.success && goldenRes.success && studentRes.stdout === goldenRes.stdout) {
+              isCorrect = true;
+            }
+          }
         }
       } else {
         // CHOICE or SHORT: Compare single answer with correctAnswers[0]

@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import { useExamSets } from "@/lib/hooks/useExamSets";
 import { useSubmissions } from "@/lib/hooks/useSubmissions";
@@ -26,13 +27,34 @@ import type { ExamSet } from "@/components/dashboard/DashboardFilters";
 const ROWS_PER_PAGE = 20;
 
 export default function AdminDashboardPage() {
-  // Filters state
-  const [selectedExamSetId, setSelectedExamSetId] = useState<string>("");
-  const [selectedClassroom, setSelectedClassroom] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "score" | "date">("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [currentPage, setCurrentPage] = useState(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // Initialize filters from URL query params
+  const [selectedExamSetId, setSelectedExamSetId] = useState<string>(searchParams.get("exam") || "");
+  const [selectedClassroom, setSelectedClassroom] = useState<string>(searchParams.get("classroom") || "");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [sortBy, setSortBy] = useState<"name" | "score" | "date">((searchParams.get("sortBy") as "name" | "score" | "date") || "date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">((searchParams.get("sortOrder") as "asc" | "desc") || "desc");
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
+
+  // Sync filter state to URL query params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedExamSetId) params.set("exam", selectedExamSetId);
+    if (selectedClassroom) params.set("classroom", selectedClassroom);
+    if (searchQuery) params.set("q", searchQuery);
+    if (sortBy !== "date") params.set("sortBy", sortBy);
+    if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
+    if (currentPage > 1) params.set("page", currentPage.toString());
+    
+    const queryString = params.toString();
+    const newUrl = queryString ? `?${queryString}` : "/admin/dashboard";
+    
+    // Replace URL without causing navigation (silent update)
+    window.history.replaceState(null, "", newUrl);
+  }, [selectedExamSetId, selectedClassroom, searchQuery, sortBy, sortOrder, currentPage]);
+
 
   const toast = useToast();
 
@@ -105,6 +127,11 @@ export default function AdminDashboardPage() {
     const unique = [...new Set(submissions.map((s) => s.classroom).filter(Boolean))] as string[];
     return unique.sort();
   }, [submissions]);
+
+  // Selected exam memoized
+  const selectedExam = useMemo(() => {
+    return selectedExamSetId ? examSets.find((e) => e.id === selectedExamSetId) : null;
+  }, [selectedExamSetId, examSets]);
 
   // Statistics calculations
   const stats = useMemo(() => {
@@ -221,13 +248,13 @@ export default function AdminDashboardPage() {
     setCurrentPage(1);
   }, [selectedExamSetId, selectedClassroom, searchQuery]);
 
-  // Handlers
-  const handleRefresh = () => {
+  // Handlers with useCallback
+  const handleRefresh = useCallback(() => {
     mutateExams();
     mutateSubmissions();
-  };
+  }, [mutateExams, mutateSubmissions]);
 
-  const handleDelete = async (submissionId: string) => {
+  const handleDelete = useCallback(async (submissionId: string) => {
     if (!confirm("คุณต้องการลบรายการนี้ใช่หรือไม่?")) return;
 
     try {
@@ -240,9 +267,9 @@ export default function AdminDashboardPage() {
     } catch (error) {
       console.error("Error deleting:", error);
     }
-  };
+  }, [mutateSubmissions]);
 
-  const handleToggleExamStatus = async (examId: string) => {
+  const handleToggleExamStatus = useCallback(async (examId: string) => {
     const exam = examSets.find((e) => e.id === examId);
     if (!exam) return;
 
@@ -256,9 +283,9 @@ export default function AdminDashboardPage() {
     } catch (error) {
       console.error("Error toggling status:", error);
     }
-  };
+  }, [examSets, mutateExams]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     if (filteredSubmissions.length === 0) {
       toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
       return;
@@ -269,9 +296,9 @@ export default function AdminDashboardPage() {
       exportSubmissionsToCSV(filteredSubmissions, "exam_results");
       toast.showToast("success", "ส่งออกข้อมูลเรียบร้อย");
     });
-  };
+  }, [filteredSubmissions, toast]);
 
-  const handleExportStatistics = () => {
+  const handleExportStatistics = useCallback(() => {
     if (filteredSubmissions.length === 0) {
       toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
       return;
@@ -282,9 +309,9 @@ export default function AdminDashboardPage() {
       exportStatisticsToCSV(researchStats, examTitle, "statistics");
       toast.showToast("success", "ส่งออกสถิติเรียบร้อย");
     });
-  };
+  }, [filteredSubmissions, selectedExam, researchStats, toast]);
 
-  const handleExportResearch = () => {
+  const handleExportResearch = useCallback(() => {
     if (filteredSubmissions.length === 0) {
       toast.showToast("info", "ไม่มีข้อมูลให้ส่งออก");
       return;
@@ -295,11 +322,11 @@ export default function AdminDashboardPage() {
       exportResearchReport(filteredSubmissions, researchStats, examTitle, "research_report");
       toast.showToast("success", "ส่งออกรายงานวิจัยเรียบร้อย");
     });
-  };
+  }, [filteredSubmissions, selectedExam, researchStats, toast]);
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     window.print();
-  };
+  }, []);
 
   // Loading state
   if (isLoading && submissions.length === 0) {
@@ -318,22 +345,22 @@ export default function AdminDashboardPage() {
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
               <Icon name="chart" size="lg" className="text-indigo-600" />
-              Admin Dashboard
+              Dashboard
             </h1>
-            <p className="text-sm text-gray-500 mt-1">ภาพรวมระบบสอบออนไลน์</p>
+            <p className="text-sm text-gray-500 mt-1">Overview of the online exam system</p>
           </div>
         </div>
         <EmptyState
           icon="chart"
-          title="ยังไม่มีข้อมูล"
-          description="เริ่มต้นสร้างชุดข้อสอบเพื่อดูข้อมูลสถิติ"
+          title="No data available"
+          description="Start creating exam sets to view statistics"
           action={
             <a
               href="/admin/exams"
               className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
             >
               <Icon name="plus" size="sm" />
-              สร้างชุดข้อสอบ
+              Create exam set
             </a>
           }
         />
@@ -341,7 +368,6 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const selectedExam = selectedExamSetId ? examSets.find((e) => e.id === selectedExamSetId) : null;
 
   return (
     <div className="min-h-screen bg-surface p-4 md:p-6">
@@ -353,7 +379,7 @@ export default function AdminDashboardPage() {
               <Icon name="chart" size="lg" className="text-indigo-600" />
               Admin Dashboard
             </h1>
-            <p className="text-sm text-gray-500 mt-1">ภาพรวมระบบสอบออนไลน์</p>
+            <p className="text-sm text-gray-500 mt-1">Overview of the online exam system</p>
           </div>
 
           <DashboardFilters
@@ -376,25 +402,25 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
               icon="users" 
-              label="จำนวนผู้สอบ" 
+              label="Total Students" 
               value={stats.total} 
               color="indigo" 
             />
             <StatCard 
               icon="check-circle" 
-              label="อัตราผ่าน" 
+              label="Pass Rate" 
               value={`${stats.passRate}%`} 
               color="green" 
             />
             <StatCard 
               icon="star" 
-              label="คะแนนสูงสุด" 
+              label="Max Score" 
               value={`${stats.maxScore}%`} 
               color="yellow" 
             />
             <StatCard 
               icon="chart" 
-              label="คะแนนเฉลี่ย" 
+              label="Average Score" 
               value={`${stats.avgScore}%`} 
               color="blue" 
             />
@@ -408,13 +434,13 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Research Analytics Section - Collapsible */}
-        <details className="group print:hidden" open>
+        <details className="group print:hidden">
           <summary className="flex items-center justify-between cursor-pointer rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors list-none">
             <div className="flex items-center gap-3">
               <Icon name="chart" size="md" className="text-indigo-600" />
               <div>
-                <h3 className="font-semibold text-gray-800">การวิเคราะห์เชิงลึก</h3>
-                <p className="text-xs text-gray-500">สถิติ, การจัดกลุ่มนักเรียน, Box Plot, เปรียบเทียบห้อง</p>
+                <h3 className="font-semibold text-gray-800">Research Analytics</h3>
+                <p className="text-xs text-gray-500">Statistics, Student Grouping, Box Plot, Compare Classrooms</p>
               </div>
             </div>
             <Icon name="chevron-down" size="sm" className="text-gray-400 transition-transform group-open:rotate-180" />
@@ -449,7 +475,7 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="font-medium text-gray-800">{selectedExam.title}</p>
                 <p className="text-sm text-gray-600">
-                  สถานะ: {selectedExam.isActive ? "🟢 เปิดรับสอบ" : "🔴 ปิดรับสอบ"}
+                  Status: {selectedExam.isActive ? "Open for Exam" : "Closed for Exam"}
                 </p>
               </div>
             </div>
@@ -461,7 +487,7 @@ export default function AdminDashboardPage() {
                   : "bg-green-500 text-white hover:bg-green-600"
               }`}
             >
-              {selectedExam.isActive ? "ปิดรับสอบ" : "เปิดรับสอบ"}
+              {selectedExam.isActive ? "Close Exam" : "Open Exam"}
             </button>
           </div>
         )}

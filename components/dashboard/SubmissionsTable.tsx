@@ -96,8 +96,10 @@ export default function SubmissionsTable({
 }: SubmissionsTableProps) {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -107,6 +109,9 @@ export default function SubmissionsTable({
       }
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setShowSortDropdown(false);
+      }
+      if (exportRef.current && !exportRef.current.contains(event.target as Node)) {
+        setShowExportDropdown(false);
       }
     };
 
@@ -129,7 +134,7 @@ export default function SubmissionsTable({
       <div className="p-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Icon name="document" size="sm" className="text-gray-500" />
-          รายละเอียดผลสอบ ({submissions.length} รายการ)
+          Exams ({submissions.length} items)
         </h3>
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
@@ -141,7 +146,7 @@ export default function SubmissionsTable({
             />
             <input
               type="text"
-              placeholder="ค้นหาชื่อ หรือ รหัส..."
+              placeholder="Search name or ID..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-9 pr-4 py-2 border border-border rounded-lg text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-44"
@@ -181,7 +186,7 @@ export default function SubmissionsTable({
                     className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
                   >
                     <span className="w-4">{selectedClassroom === "" && <CheckIcon />}</span>
-                    ทุกห้อง
+                    All
                   </button>
                   {classrooms.map((room) => (
                     <button
@@ -193,7 +198,7 @@ export default function SubmissionsTable({
                       className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
                     >
                       <span className="w-4">{selectedClassroom === room && <CheckIcon />}</span>
-                      ห้อง {room}
+                      Room {room}
                     </button>
                   ))}
                 </div>
@@ -243,23 +248,51 @@ export default function SubmissionsTable({
             )}
           </div>
 
-          {/* Export CSV */}
-          <button
-            onClick={onExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm text-gray-600 bg-card hover:bg-muted transition-colors"
-          >
-            <Icon name="download" size="xs" />
-            CSV
-          </button>
-
-          {/* Print */}
-          <button
-            onClick={onPrint}
-            className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm text-gray-600 bg-card hover:bg-muted transition-colors"
-          >
-            <Icon name="file" size="xs" />
-            Print
-          </button>
+          {/* Export Dropdown */}
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => {
+                setShowExportDropdown(!showExportDropdown);
+                setShowFilterDropdown(false);
+                setShowSortDropdown(false);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm text-gray-600 bg-card hover:bg-muted transition-colors"
+            >
+              <Icon name="download" size="xs" />
+              Export
+              <Icon name="chevron-down" size="xs" className="ml-1" />
+            </button>
+            
+            {showExportDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border">
+                  <p className="text-xs font-semibold text-gray-500 uppercase">Export</p>
+                </div>
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      onExportCSV();
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                  >
+                    <Icon name="download" size="sm" className="text-gray-400" />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onPrint();
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                  >
+                    <Icon name="file" size="sm" className="text-gray-400" />
+                    <span>Print</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -268,16 +301,16 @@ export default function SubmissionsTable({
         <table className="w-full min-w-[900px]">
           <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ลำดับ</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">เลขที่</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ชื่อ-นามสกุล</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ห้อง</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">รหัสนักเรียน</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ชุดข้อสอบ</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">คะแนน</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">No.</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Room</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Student ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Exam Set</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Score</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">%</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">วันที่</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase print:hidden">จัดการ</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase print:hidden">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -296,7 +329,7 @@ export default function SubmissionsTable({
               <tr>
                 <td colSpan={10} className="px-4 py-10 text-center text-gray-400">
                   <Icon name="folder" size="lg" className="mx-auto mb-2 text-gray-300" />
-                  <p>ไม่พบข้อมูล</p>
+                  <p>No data found</p>
                 </td>
               </tr>
             ) : (
@@ -334,7 +367,7 @@ export default function SubmissionsTable({
                       <Link
                         href={`/admin/grade/${sub.id}`}
                         className="p-1.5 text-gray-500 hover:bg-gray-100 rounded transition-colors"
-                        title="ตรวจ"
+                        title="Edit"
                       >
                         <Icon name="edit" size="sm" />
                       </Link>
@@ -358,7 +391,7 @@ export default function SubmissionsTable({
       {totalPages > 1 && (
         <div className="p-4 border-t border-gray-100 flex items-center justify-between print:hidden">
           <p className="text-sm text-gray-500">
-            หน้า {currentPage} จาก {totalPages}
+            Page {currentPage} of {totalPages}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -366,14 +399,14 @@ export default function SubmissionsTable({
               disabled={currentPage === 1}
               className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ก่อนหน้า
+              Previous
             </button>
             <button
               onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ถัดไป
+              Next
             </button>
           </div>
         </div>
