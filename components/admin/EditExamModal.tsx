@@ -19,6 +19,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
   const [editShuffleQuestions, setEditShuffleQuestions] = useState(false);
   const [editLockScreen, setEditLockScreen] = useState(false);
   const [editIsActive, setEditIsActive] = useState(false);
+  const [originalIsActive, setOriginalIsActive] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const toast = useToast();
 
@@ -28,9 +29,22 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       setEditSubject(exam.subject || "");
       setEditTimeLimit(exam.timeLimitMinutes || null);
       setEditInstructions(Array.isArray(exam.instructions) ? exam.instructions.join('\n') : "");
-      setEditShuffleQuestions(exam.shuffleQuestions || false);
-      setEditLockScreen(exam.lockScreen || false);
-      setEditIsActive(exam.isActive || false);
+      setEditShuffleQuestions(exam.shuffleQuestions ?? false);
+      setEditLockScreen(exam.lockScreen ?? false);
+      // Use explicit boolean check to ensure false is preserved
+      const initialIsActive = exam.isActive === true;
+      setEditIsActive(initialIsActive);
+      setOriginalIsActive(initialIsActive);
+    } else {
+      // Reset all states when exam is null
+      setEditTitle("");
+      setEditSubject("");
+      setEditTimeLimit(null);
+      setEditInstructions("");
+      setEditShuffleQuestions(false);
+      setEditLockScreen(false);
+      setEditIsActive(false);
+      setOriginalIsActive(false);
     }
   }, [exam]);
 
@@ -45,18 +59,25 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
         ? editInstructions.trim().split('\n').filter(line => line.trim())
         : null;
 
+      // Only send isActive if it has changed
+      const updateData: Record<string, any> = {
+        title: editTitle.trim(),
+        subject: editSubject.trim() || null,
+        timeLimitMinutes: editTimeLimit,
+        instructions: instructionsArray,
+        shuffleQuestions: editShuffleQuestions,
+        lockScreen: editLockScreen,
+      };
+      
+      // Only include isActive if it has changed from original
+      if (editIsActive !== originalIsActive) {
+        updateData.isActive = editIsActive;
+      }
+
       const response = await fetch(`/api/exam-sets/${exam.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editTitle.trim(),
-          subject: editSubject.trim() || null,
-          timeLimitMinutes: editTimeLimit,
-          instructions: instructionsArray,
-          shuffleQuestions: editShuffleQuestions,
-          lockScreen: editLockScreen,
-          isActive: editIsActive,
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (response.ok) {

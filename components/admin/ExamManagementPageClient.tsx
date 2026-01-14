@@ -22,8 +22,13 @@ export default function ExamManagementPageClient({ initialExamSets }: ExamManage
   };
 
   const handleEditSuccess = async () => {
-    // Refetch exam sets
-    const response = await fetch("/api/exam-sets");
+    // Refetch exam sets with cache bypass
+    const response = await fetch("/api/exam-sets", {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+      },
+    });
     if (response.ok) {
       const data = await response.json();
       setExamSets(data.examSets || []);
