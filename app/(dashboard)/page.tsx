@@ -4,6 +4,8 @@ import { isAdmin } from "@/lib/data/auth";
 import ExamCardGrid from "@/components/ExamCardGrid";
 import ExamSetsSkeleton from "@/components/dashboard/ExamSetsSkeleton";
 
+export const dynamic = 'force-dynamic';
+
 async function DashboardHeader() {
   const admin = await isAdmin();
   const examSets = await getExamSets();
