@@ -37,6 +37,9 @@ interface ExamSet {
   timeLimitMinutes?: number | null;
   shuffleQuestions?: boolean;
   lockScreen?: boolean;
+  // Pre-Post Test fields
+  examType?: string;
+  pairId?: string | null;
 }
 
 interface QuestionFormData {
@@ -75,6 +78,8 @@ export default function ExamEditorPage() {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
   const [lockScreen, setLockScreen] = useState(false);
+  const [examType, setExamType] = useState("general");
+  const [pairId, setPairId] = useState("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Form setup
@@ -137,6 +142,8 @@ export default function ExamEditorPage() {
       setTimeLimitMinutes(examSet.timeLimitMinutes || null);
       setShuffleQuestions(examSet.shuffleQuestions || false);
       setLockScreen(examSet.lockScreen || false);
+      setExamType(examSet.examType || "general");
+      setPairId(examSet.pairId || "");
     }
   }, [examSet]);
 
@@ -153,6 +160,8 @@ export default function ExamEditorPage() {
           timeLimitMinutes: timeLimitMinutes || null,
           shuffleQuestions,
           lockScreen,
+          examType,
+          pairId: pairId || null,
         }),
       });
       if (response.ok) {
@@ -930,6 +939,65 @@ export default function ExamEditorPage() {
                     }`}
                   />
                 </button>
+              </div>
+
+              {/* Exam Type Selector */}
+              <div className="p-4 bg-muted rounded-lg border border-border">
+                <p className="text-sm font-medium text-gray-700 mb-3">ประเภทข้อสอบ</p>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="examType"
+                      value="general"
+                      checked={examType === "general"}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700">ทั่วไป (General)</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="examType"
+                      value="pretest"
+                      checked={examType === "pretest"}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700">ก่อนเรียน (Pre-test)</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="examType"
+                      value="posttest"
+                      checked={examType === "posttest"}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700">หลังเรียน (Post-test)</span>
+                  </label>
+                </div>
+
+                {/* Pair ID - show only for pre/post test */}
+                {(examType === "pretest" || examType === "posttest") && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      รหัสชุดคู่ (Pair ID)
+                    </label>
+                    <input
+                      type="text"
+                      value={pairId}
+                      onChange={(e) => setPairId(e.target.value)}
+                      placeholder="เช่น unit-1, chapter-3"
+                      className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      ข้อสอบ Pre และ Post ที่มี Pair ID เดียวกันจะถูกนำมาวิเคราะห์เปรียบเทียบด้วยกัน
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

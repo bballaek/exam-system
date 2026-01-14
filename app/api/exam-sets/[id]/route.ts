@@ -70,6 +70,12 @@ export async function PATCH(
     if (body.instructions !== undefined) {
       updateData.instructions = body.instructions || null;
     }
+    if (body.examType !== undefined) {
+      updateData.examType = body.examType;
+    }
+    if (body.pairId !== undefined) {
+      updateData.pairId = body.pairId || null;
+    }
 
     const examSet = await prisma.examSet.update({
       where: { id },

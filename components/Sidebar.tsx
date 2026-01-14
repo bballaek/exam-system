@@ -36,6 +36,7 @@ const adminMenuItems: MenuItem[] = [
   { id: "MANAGE", label: "Manage Exam", icon: "settings", href: "/admin/exams" },
   { id: "DASHBOARD", label: "Dashboard", icon: "chart", href: "/admin/dashboard" },
   { id: "LEARNERS", label: "Learners", icon: "users", href: "/admin/learners" },
+  { id: "PREPOST", label: "Pre-Post Analysis", icon: "chart", href: "/admin/prepost" },
   { id: "PROGRESS", label: "Progress", icon: "eye", href: "/admin/status" },
 ];
 

@@ -27,12 +27,17 @@ model ExamSet {
   lockScreen       Boolean @default(false) // ล็อกหน้าจอระหว่างทำข้อสอบ
   instructions     Json?      // คำชี้แจง/คำแนะนำ (array of strings) - ถ้าเป็น null จะใช้ค่าพื้นฐาน
   
+  // Pre-Post Test fields
+  examType  String  @default("general") // 'general' | 'pretest' | 'posttest'
+  pairId    String? // ID สำหรับจับคู่ pre-post (เช่น "unit-1")
+  
   questions   Question[]
   submissions ExamSubmission[]
 
   // Indexes for performance
   @@index([isActive, createdAt])
   @@index([subject])
+  @@index([examType, pairId])
 }
 
 // 2. ตารางตัวข้อสอบ
