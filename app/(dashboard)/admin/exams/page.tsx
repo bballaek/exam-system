@@ -3,6 +3,8 @@ import { getExamSets } from "@/lib/data/exam-sets";
 import ExamManagementPageClient from "@/components/admin/ExamManagementPageClient";
 import Icon from "@/components/Icon";
 
+export const dynamic = 'force-dynamic';
+
 async function ExamSetsContent() {
   const examSets = await getExamSets();
   return <ExamManagementPageClient initialExamSets={examSets} />;
