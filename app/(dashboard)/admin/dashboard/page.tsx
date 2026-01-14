@@ -328,6 +328,42 @@ export default function AdminDashboardPage() {
     window.print();
   }, []);
 
+  // Bulk operations
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    if (!confirm(`คุณต้องการลบ ${ids.length} รายการที่เลือกใช่หรือไม่?`)) return;
+
+    try {
+      const response = await fetch('/api/results/bulk', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.showToast('success', `ลบ ${data.deleted} รายการเรียบร้อย`);
+        mutateSubmissions();
+      } else {
+        throw new Error('Failed to delete');
+      }
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      toast.showToast('error', 'เกิดข้อผิดพลาดในการลบ');
+    }
+  }, [mutateSubmissions, toast]);
+
+  const handleBulkExport = useCallback((selected: Submission[]) => {
+    if (selected.length === 0) {
+      toast.showToast('info', 'ไม่มีข้อมูลให้ส่งออก');
+      return;
+    }
+
+    import('@/lib/exportData').then(({ exportSubmissionsToCSV }) => {
+      exportSubmissionsToCSV(selected, 'selected_results');
+      toast.showToast('success', `ส่งออก ${selected.length} รายการเรียบร้อย`);
+    });
+  }, [toast]);
+
   // Loading state
   if (isLoading && submissions.length === 0) {
     return (
@@ -511,6 +547,8 @@ export default function AdminDashboardPage() {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortChange={(by, order) => { setSortBy(by); setSortOrder(order); }}
+          onBulkDelete={handleBulkDelete}
+          onBulkExport={handleBulkExport}
         />
       </div>
     </div>

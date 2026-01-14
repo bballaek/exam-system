@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Icon from "@/components/Icon";
 
@@ -30,13 +30,16 @@ interface SubmissionsTableProps {
   onExportCSV: () => void;
   onPrint: () => void;
   isLoading?: boolean;
-  // New props for filter/sort
+  // Filter/sort props
   classrooms?: string[];
   selectedClassroom?: string;
   onClassroomChange?: (classroom: string) => void;
   sortBy?: "name" | "score" | "date";
   sortOrder?: "asc" | "desc";
   onSortChange?: (by: "name" | "score" | "date", order: "asc" | "desc") => void;
+  // Bulk operation props
+  onBulkDelete?: (ids: string[]) => void;
+  onBulkExport?: (submissions: Submission[]) => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -93,13 +96,29 @@ export default function SubmissionsTable({
   sortBy = "date",
   sortOrder = "desc",
   onSortChange,
+  onBulkDelete,
+  onBulkExport,
 }: SubmissionsTableProps) {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  // Get all current page submission IDs for select all
+  const currentPageIds = useMemo(() => submissions.map(s => s.id), [submissions]);
+  
+  // Check if all items on current page are selected
+  const allSelected = currentPageIds.length > 0 && currentPageIds.every(id => selectedIds.has(id));
+  const someSelected = currentPageIds.some(id => selectedIds.has(id));
+
+  // Clear selection when page/filter changes
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [currentPage, searchQuery, selectedClassroom]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -119,6 +138,55 @@ export default function SubmissionsTable({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Toggle single selection
+  const toggleSelection = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Toggle select all on current page
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      // Deselect all on current page
+      const newSet = new Set(selectedIds);
+      currentPageIds.forEach(id => newSet.delete(id));
+      setSelectedIds(newSet);
+    } else {
+      // Select all on current page
+      const newSet = new Set(selectedIds);
+      currentPageIds.forEach(id => newSet.add(id));
+      setSelectedIds(newSet);
+    }
+  };
+
+  // Clear all selections
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    if (onBulkDelete) {
+      onBulkDelete(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    }
+  };
+
+  // Handle bulk export
+  const handleBulkExport = () => {
+    if (selectedIds.size === 0) return;
+    if (onBulkExport) {
+      const selected = submissions.filter(s => selectedIds.has(s.id));
+      onBulkExport(selected);
+    }
+  };
+
   const sortOptions = [
     { value: "date-desc", label: "วันที่ล่าสุด" },
     { value: "date-asc", label: "วันที่เก่าสุด" },
@@ -129,7 +197,44 @@ export default function SubmissionsTable({
   ];
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden relative">
+      {/* Floating Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-0 z-20 bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-2">
+              <span className="bg-white text-indigo-600 px-2 py-0.5 rounded-full text-sm font-bold">
+                {selectedIds.size}
+              </span>
+              <span className="text-sm">รายการที่เลือก</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBulkExport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Icon name="download" size="sm" />
+              Export
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Icon name="trash" size="sm" />
+              Delete
+            </button>
+            <button
+              onClick={clearSelection}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Icon name="close" size="sm" />
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table Header */}
       <div className="p-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -301,6 +406,17 @@ export default function SubmissionsTable({
         <table className="w-full min-w-[900px]">
           <thead className="bg-muted border-b border-border">
             <tr>
+              <th className="px-4 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected && !allSelected;
+                  }}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">No.</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
@@ -318,7 +434,7 @@ export default function SubmissionsTable({
               // Loading skeleton rows
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 10 }).map((_, j) => (
+                  {Array.from({ length: 11 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
                       <div className="h-4 bg-gray-200 rounded animate-pulse" />
                     </td>
@@ -327,14 +443,25 @@ export default function SubmissionsTable({
               ))
             ) : submissions.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-10 text-center text-gray-400">
+                <td colSpan={11} className="px-4 py-10 text-center text-gray-400">
                   <Icon name="folder" size="lg" className="mx-auto mb-2 text-gray-300" />
                   <p>No data found</p>
                 </td>
               </tr>
             ) : (
               submissions.map((sub, index) => (
-                <tr key={sub.id} className="hover:bg-gray-50">
+                <tr 
+                  key={sub.id} 
+                  className={`hover:bg-gray-50 ${selectedIds.has(sub.id) ? 'bg-indigo-50' : ''}`}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(sub.id)}
+                      onChange={() => toggleSelection(sub.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {(currentPage - 1) * rowsPerPage + index + 1}
                   </td>
@@ -414,4 +541,3 @@ export default function SubmissionsTable({
     </div>
   );
 }
-
