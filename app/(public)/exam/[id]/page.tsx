@@ -807,7 +807,7 @@ export default function PublicExamPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">รหัสนักเรียน <span className="text-red-500">*</span></label>
                   <input 
-                    type="text" 
+                    type="number" 
                     value={studentInfo.studentId} 
                     onChange={(e) => setStudentInfo({ ...studentInfo, studentId: e.target.value })} 
                     className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
@@ -820,22 +820,32 @@ export default function PublicExamPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">เลขที่</label>
                     <input 
-                      type="text" 
+                      type="number" 
                       value={studentInfo.studentNumber} 
                       onChange={(e) => setStudentInfo({ ...studentInfo, studentNumber: e.target.value })} 
                       className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="เช่น 1" 
+                      placeholder="-" 
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">ห้อง</label>
-                    <input 
-                      type="text" 
-                      value={studentInfo.classroom} 
-                      onChange={(e) => setStudentInfo({ ...studentInfo, classroom: e.target.value })} 
-                      className="w-full px-3 py-2.5 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all" 
-                      placeholder="เช่น 2 ไม่ต้องกรอก /" 
-                    />
+                    <div className="relative">
+                      <select
+                        value={studentInfo.classroom}
+                        onChange={(e) => setStudentInfo({ ...studentInfo, classroom: e.target.value })}
+                        className="w-full px-3 py-2.5 pr-10 border border-border bg-card rounded-lg text-sm focus:border-gray-900 focus:outline-none transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="">-</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                          <option key={num} value={num.toString()}>
+                            {num}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <Icon name="chevron-down" size="sm" className="text-gray-400" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
