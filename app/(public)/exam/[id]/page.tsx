@@ -517,12 +517,20 @@ export default function PublicExamPage() {
     return (
       <div className={containerClass}>
         <div className={cardClass}>
-          <div className="p-8 text-center">
-            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon name="lock" size="lg" className="text-amber-600" />
+          <div className="p-12 text-center">
+            {/* Large lock icon with red circular border */}
+            <div className="w-32 h-32 rounded-full border-4 border-red-500 flex items-center justify-center mx-auto mb-8">
+              <svg 
+                className="w-16 h-16 text-gray-800" 
+                fill="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+              </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">ข้อสอบนี้ปิดแล้ว</h1>
-            <p className="text-gray-500 text-sm">ชุดข้อสอบนี้ไม่เปิดให้ทำในขณะนี้</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Exam is closed</h1>
+            <p className="text-gray-600 italic mb-1">This exam is not open at this time</p>
+            <p className="text-gray-500 text-sm">(Please contact your instructor)</p>
           </div>
         </div>
       </div>
