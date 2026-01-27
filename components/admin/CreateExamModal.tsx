@@ -53,6 +53,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
           description: newExam.description,
           subject: newExam.subject,
           isActive: newExam.isActive,
+          isHidden: newExam.isHidden ?? false,
           createdAt: newExam.createdAt,
           timeLimitMinutes: newExam.timeLimitMinutes,
           shuffleQuestions: false,
