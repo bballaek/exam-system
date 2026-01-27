@@ -5,6 +5,7 @@ export interface ExamSetWithStats {
   title: string;
   description: string | null;
   subject: string | null;
+  classroom: string | null;
   isActive: boolean;
   isHidden: boolean;
   createdAt: string;
@@ -72,6 +73,7 @@ export async function getExamSets(): Promise<ExamSetWithStats[]> {
       title: exam.title,
       description: exam.description,
       subject: exam.subject,
+      classroom: (exam as ExamSetType & { classroom?: string }).classroom ?? null,
       isActive: exam.isActive,
       isHidden: (exam as ExamSetType & { isHidden?: boolean }).isHidden ?? false,
       createdAt: exam.createdAt.toISOString(),

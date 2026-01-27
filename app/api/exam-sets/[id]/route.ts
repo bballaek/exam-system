@@ -49,6 +49,7 @@ export async function PATCH(
     if (body.title !== undefined) updateData.title = body.title;
     if (body.description !== undefined) updateData.description = body.description;
     if (body.subject !== undefined) updateData.subject = body.subject;
+    if (body.classroom !== undefined) updateData.classroom = body.classroom;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     
     // Scheduling fields

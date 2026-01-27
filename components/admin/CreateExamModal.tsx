@@ -14,6 +14,7 @@ interface CreateExamModalProps {
 export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateExamModalProps) {
   const [newExamTitle, setNewExamTitle] = useState("");
   const [newExamSubject, setNewExamSubject] = useState("");
+  const [newExamClassroom, setNewExamClassroom] = useState("");
   const [newExamTimeLimit, setNewExamTimeLimit] = useState<number | null>(60);
   const [newExamInstructions, setNewExamInstructions] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -39,6 +40,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
         body: JSON.stringify({
           title: newExamTitle.trim(),
           subject: newExamSubject.trim() || null,
+          classroom: newExamClassroom.trim() || null,
           timeLimitMinutes: newExamTimeLimit,
           instructions: instructionsArray,
         }),
@@ -52,6 +54,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
           title: newExam.title,
           description: newExam.description,
           subject: newExam.subject,
+          classroom: newExam.classroom ?? null,
           isActive: newExam.isActive,
           isHidden: newExam.isHidden ?? false,
           createdAt: newExam.createdAt,
@@ -75,6 +78,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
         onSuccess(formattedExam);
         setNewExamTitle("");
         setNewExamSubject("");
+        setNewExamClassroom("");
         setNewExamTimeLimit(60);
         setNewExamInstructions("");
         onClose();
@@ -112,6 +116,18 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
               className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="e.g. Midterm Exam 1/2568"
               autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Class (Optional)
+            </label>
+            <input
+              type="text"
+              value={newExamClassroom}
+              onChange={(e) => setNewExamClassroom(e.target.value)}
+              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="e.g. ม.1/1, ม.4/2"
             />
           </div>
           <div>

@@ -16,6 +16,7 @@ model ExamSet {
   title       String   // เช่น "สอบกลางภาค 1/2568"
   description String?
   subject     String?  // ชื่อวิชา เช่น "คณิตศาสตร์", "วิทยาศาสตร์"
+  classroom   String?  // ชั้นเรียน/ห้อง เช่น "ม.1/1", "ม.4/2"
   isActive    Boolean  @default(false) // ตัวเปิด-ปิด ให้เด็กเห็นหรือไม่
   isHidden    Boolean  @default(false) // ซ่อนจากหน้าแรก (ใช้ได้เฉพาะเมื่อ isActive = false)
   createdAt   DateTime @default(now())

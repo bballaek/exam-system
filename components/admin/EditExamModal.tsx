@@ -14,6 +14,7 @@ interface EditExamModalProps {
 export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModalProps) {
   const [editTitle, setEditTitle] = useState("");
   const [editSubject, setEditSubject] = useState("");
+  const [editClassroom, setEditClassroom] = useState("");
   const [editTimeLimit, setEditTimeLimit] = useState<number | null>(null);
   const [editInstructions, setEditInstructions] = useState("");
   const [editShuffleQuestions, setEditShuffleQuestions] = useState(false);
@@ -29,6 +30,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
     if (exam) {
       setEditTitle(exam.title);
       setEditSubject(exam.subject || "");
+      setEditClassroom((exam as any).classroom || "");
       setEditTimeLimit(exam.timeLimitMinutes || null);
       setEditInstructions(Array.isArray(exam.instructions) ? exam.instructions.join('\n') : "");
       setEditShuffleQuestions(exam.shuffleQuestions ?? false);
@@ -44,6 +46,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       // Reset all states when exam is null
       setEditTitle("");
       setEditSubject("");
+      setEditClassroom("");
       setEditTimeLimit(null);
       setEditInstructions("");
       setEditShuffleQuestions(false);
@@ -70,6 +73,7 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       const updateData: Record<string, any> = {
         title: editTitle.trim(),
         subject: editSubject.trim() || null,
+        classroom: editClassroom.trim() || null,
         timeLimitMinutes: editTimeLimit,
         instructions: instructionsArray,
         shuffleQuestions: editShuffleQuestions,
@@ -152,6 +156,18 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Class (Optional)
+              </label>
+              <input
+                type="text"
+                value={editClassroom}
+                onChange={(e) => setEditClassroom(e.target.value)}
+                className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="e.g. ม.1/1, ม.4/2"
               />
             </div>
             <div>
