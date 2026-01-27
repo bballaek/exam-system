@@ -102,6 +102,7 @@ export default function ExamCardGrid({ examSets }: ExamCardGridProps) {
               id={exam.id}
               title={exam.title}
               subject={exam.subject || "ทั่วไป"}
+              classroom={exam.classroom}
               subjectColor={subjectColors[exam.subject || ""] || "default"}
               time={exam.timeLimitMinutes || 0}
               questionCount={exam.questionCount}

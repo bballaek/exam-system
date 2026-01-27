@@ -14,6 +14,7 @@ interface ExamCardProps {
   id: string;
   title: string;
   subject: string;
+  classroom?: string | null;
   subjectColor: string;
   time: number;
   questionCount: number;
@@ -27,6 +28,7 @@ function ExamCard({
   id,
   title,
   subject,
+  classroom,
   time,
   questionCount,
   totalPoints,
@@ -54,10 +56,20 @@ function ExamCard({
       <div className="p-5">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-3">
-          {/* Subject Badge */}
-          <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
-            {subject || "Exam"}
-          </span>
+          {/* Subject & Classroom Badge */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+              {subject || "Exam"}
+            </span>
+            {classroom && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-[11px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                  {classroom}
+                </span>
+              </>
+            )}
+          </div>
 
           {/* Status Badge */}
           <div className={`
