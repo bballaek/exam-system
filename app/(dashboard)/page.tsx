@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic';
 async function DashboardHeader() {
   const admin = await isAdmin();
   const examSets = await getExamSets();
-  const activeCount = examSets.filter((e) => e.isActive).length;
+  // Only count visible (non-hidden) active exams
+  const activeCount = examSets.filter((e) => e.isActive && !e.isHidden).length;
 
   return (
     <div className="mb-6">
@@ -25,7 +26,9 @@ async function DashboardHeader() {
 
 async function ExamSetsContent() {
   const examSets = await getExamSets();
-  return <ExamCardGrid examSets={examSets} />;
+  // Filter out hidden exams from homepage (Admin sees all in Manage Exam page)
+  const visibleExamSets = examSets.filter(e => !e.isHidden);
+  return <ExamCardGrid examSets={visibleExamSets} />;
 }
 
 export default function DashboardPage() {

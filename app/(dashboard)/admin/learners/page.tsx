@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/Icon";
 import { useExamSets } from "@/lib/hooks/useExamSets";
 import { useSubmissions } from "@/lib/hooks/useSubmissions";
+import { useToast } from "@/components/Toast";
 
 type TabType = "overview" | "progress";
 type StatusType = "pass" | "failed";
@@ -12,6 +13,7 @@ interface LearnerData {
   id: string;
   studentName: string;
   studentId: string;
+  studentNumber: string | null;
   classroom: string | null;
   score: number;
   totalPoints: number;
@@ -41,6 +43,7 @@ export default function LearnersPage() {
       id: sub.id,
       studentName: sub.studentName,
       studentId: sub.studentId,
+      studentNumber: sub.studentNumber ?? null,
       classroom: sub.classroom ?? null,
       score: sub.score,
       totalPoints: sub.totalPoints,
@@ -51,9 +54,104 @@ export default function LearnersPage() {
   }, [submissions]);
 
   // Filter learners by search
-  const [sortBy, setSortBy] = useState<"name" | "score" | "progress" | "date">("name");
+  const [sortBy, setSortBy] = useState<"name" | "score" | "progress" | "date" | "number">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [statusFilter, setStatusFilter] = useState<StatusType | "all">("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  const toast = useToast();
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [selectedExamId, searchQuery, statusFilter]);
+
+  // Toggle single selection
+  const toggleSelection = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Toggle select all on current page
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      // Deselect all on current page
+      const newSet = new Set(selectedIds);
+      currentPageIds.forEach(id => newSet.delete(id));
+      setSelectedIds(newSet);
+    } else {
+      // Select all on current page
+      const newSet = new Set(selectedIds);
+      currentPageIds.forEach(id => newSet.add(id));
+      setSelectedIds(newSet);
+    }
+  };
+
+  // Clear all selections
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`คุณต้องการลบ ${selectedIds.size} รายการที่เลือกใช่หรือไม่?`)) return;
+
+    try {
+      const response = await fetch('/api/results/bulk', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.showToast('success', `ลบ ${data.deleted} รายการเรียบร้อย`);
+        setSelectedIds(new Set());
+        // Trigger refetch
+        window.location.reload();
+      } else {
+        throw new Error('Failed to delete');
+      }
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      toast.showToast('error', 'เกิดข้อผิดพลาดในการลบ');
+    }
+  };
+
+  // Handle bulk export
+  const handleBulkExport = () => {
+    if (selectedIds.size === 0) return;
+    
+    const selected = filteredLearners.filter(l => selectedIds.has(l.id));
+    const headers = ["Name", "Student ID", "Classroom", "Score", "Total", "Percentage", "Status", "Submitted At"];
+    const rows = selected.map((l) => [
+      l.studentName,
+      l.studentId,
+      l.classroom || "-",
+      l.score.toString(),
+      l.totalPoints.toString(),
+      `${l.percentage}%`,
+      statusConfig[l.status].label,
+      new Date(l.submittedAt).toLocaleString(),
+    ]);
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `selected_progress_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    
+    toast.showToast('success', `ส่งออก ${selected.length} รายการเรียบร้อย`);
+  };
 
   const filteredLearners = useMemo(() => {
     let result = learners;
@@ -89,12 +187,24 @@ export default function LearnersPage() {
         case "date":
           comparison = new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
           break;
+        case "number":
+          const numA = parseInt(a.studentNumber || "0", 10);
+          const numB = parseInt(b.studentNumber || "0", 10);
+          comparison = numA - numB;
+          break;
       }
       return sortOrder === "asc" ? comparison : -comparison;
     });
     
     return result;
   }, [learners, searchQuery, statusFilter, sortBy, sortOrder]);
+
+  // Get all current page learner IDs for select all
+  const currentPageIds = useMemo(() => filteredLearners.map(l => l.id), [filteredLearners]);
+  
+  // Check if all items on current page are selected
+  const allSelected = currentPageIds.length > 0 && currentPageIds.every(id => selectedIds.has(id));
+  const someSelected = currentPageIds.some(id => selectedIds.has(id));
 
   // Export to CSV
   const handleExportCSV = () => {
@@ -477,7 +587,44 @@ export default function LearnersPage() {
 
       {/* Progress Tab Content */}
       {!isLoading && activeTab === "progress" && (
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden relative">
+          {/* Floating Bulk Action Bar */}
+          {selectedIds.size > 0 && (
+            <div className="sticky top-0 z-20 bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-2">
+                  <span className="bg-white text-indigo-600 px-2 py-0.5 rounded-full text-sm font-bold">
+                    {selectedIds.size}
+                  </span>
+                  <span className="text-sm">รายการที่เลือก</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBulkExport}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Icon name="download" size="sm" />
+                  Export
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Icon name="trash" size="sm" />
+                  Delete
+                </button>
+                <button
+                  onClick={clearSelection}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Icon name="close" size="sm" />
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Controls Bar */}
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -507,6 +654,8 @@ export default function LearnersPage() {
                   }}
                   className="pl-8 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
                 >
+                  <option value="number-asc">เลขที่ 1 → 99</option>
+                  <option value="number-desc">เลขที่ 99 → 1</option>
                   <option value="name-asc">Name A → Z</option>
                   <option value="name-desc">Name Z → A</option>
                   <option value="score-desc">Score High → Low</option>
@@ -546,7 +695,15 @@ export default function LearnersPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  <input type="checkbox" className="rounded border-gray-300" />
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someSelected && !allSelected;
+                    }}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                   Full name ↕
@@ -575,9 +732,14 @@ export default function LearnersPage() {
                 </tr>
               ) : (
                 filteredLearners.map((learner) => (
-                  <tr key={learner.id} className="hover:bg-gray-50">
+                  <tr key={learner.id} className={`hover:bg-gray-50 ${selectedIds.has(learner.id) ? 'bg-indigo-50' : ''}`}>
                     <td className="px-4 py-4">
-                      <input type="checkbox" className="rounded border-gray-300" />
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(learner.id)}
+                        onChange={() => toggleSelection(learner.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">

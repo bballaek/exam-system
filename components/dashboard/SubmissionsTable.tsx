@@ -34,9 +34,9 @@ interface SubmissionsTableProps {
   classrooms?: string[];
   selectedClassroom?: string;
   onClassroomChange?: (classroom: string) => void;
-  sortBy?: "name" | "score" | "date";
+  sortBy?: "name" | "score" | "date" | "number";
   sortOrder?: "asc" | "desc";
-  onSortChange?: (by: "name" | "score" | "date", order: "asc" | "desc") => void;
+  onSortChange?: (by: "name" | "score" | "date" | "number", order: "asc" | "desc") => void;
   // Bulk operation props
   onBulkDelete?: (ids: string[]) => void;
   onBulkExport?: (submissions: Submission[]) => void;
@@ -188,6 +188,8 @@ export default function SubmissionsTable({
   };
 
   const sortOptions = [
+    { value: "number-asc", label: "เลขที่ 1 → 99" },
+    { value: "number-desc", label: "เลขที่ 99 → 1" },
     { value: "date-desc", label: "วันที่ล่าสุด" },
     { value: "date-asc", label: "วันที่เก่าสุด" },
     { value: "score-desc", label: "คะแนนสูง → ต่ำ" },

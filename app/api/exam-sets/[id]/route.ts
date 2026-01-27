@@ -67,6 +67,9 @@ export async function PATCH(
     if (body.lockScreen !== undefined) {
       updateData.lockScreen = body.lockScreen;
     }
+    if (body.isHidden !== undefined) {
+      updateData.isHidden = body.isHidden;
+    }
     if (body.instructions !== undefined) {
       updateData.instructions = body.instructions || null;
     }

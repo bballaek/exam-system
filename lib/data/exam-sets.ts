@@ -6,6 +6,7 @@ export interface ExamSetWithStats {
   description: string | null;
   subject: string | null;
   isActive: boolean;
+  isHidden: boolean;
   createdAt: string;
   timeLimitMinutes: number | null;
   shuffleQuestions: boolean;
@@ -72,6 +73,7 @@ export async function getExamSets(): Promise<ExamSetWithStats[]> {
       description: exam.description,
       subject: exam.subject,
       isActive: exam.isActive,
+      isHidden: (exam as ExamSetType & { isHidden?: boolean }).isHidden ?? false,
       createdAt: exam.createdAt.toISOString(),
       timeLimitMinutes: exam.timeLimitMinutes,
       shuffleQuestions: (exam as ExamSetType & { shuffleQuestions?: boolean }).shuffleQuestions ?? false,

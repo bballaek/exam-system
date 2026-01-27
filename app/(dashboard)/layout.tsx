@@ -18,7 +18,7 @@ export default function DashboardGroupLayout({
 
   return (
     <div className="flex min-h-screen bg-white">
-      {/* Sidebar */}
+      {/* Sidebar - handles both desktop and mobile */}
       <Sidebar
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
@@ -37,16 +37,14 @@ export default function DashboardGroupLayout({
             <Icon name="menu" size="md" className="text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#6e3ff3] to-[#aa8ef9] text-white">
-              <Icon name="document" size="sm" className="text-white" />
-            </div>
+            <img src="/logo.svg" alt="MasterExam" className="w-8 h-8" />
             <span className="font-semibold text-gray-900">MasterExam</span>
           </div>
           <div className="w-10" />
         </div>
 
         {/* Page Content */}
-        <div className={isFullWidthPage ? "" : "p-4 md:p-8"}>
+        <div className={isFullWidthPage ? "" : `p-4 md:p-8 ${isCollapsed ? "lg:pt-16" : ""}`}>
           {children}
         </div>
       </main>

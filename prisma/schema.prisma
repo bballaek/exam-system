@@ -17,6 +17,7 @@ model ExamSet {
   description String?
   subject     String?  // ชื่อวิชา เช่น "คณิตศาสตร์", "วิทยาศาสตร์"
   isActive    Boolean  @default(false) // ตัวเปิด-ปิด ให้เด็กเห็นหรือไม่
+  isHidden    Boolean  @default(false) // ซ่อนจากหน้าแรก (ใช้ได้เฉพาะเมื่อ isActive = false)
   createdAt   DateTime @default(now())
   
   // Scheduling fields

@@ -17,12 +17,12 @@ interface DashboardFiltersProps {
   classrooms: string[];
   selectedExamSetId: string;
   selectedClassroom: string;
-  sortBy: "name" | "score" | "date";
+  sortBy: "name" | "score" | "date" | "number";
   sortOrder: "asc" | "desc";
   isLoading: boolean;
   onExamSetChange: (id: string) => void;
   onClassroomChange: (classroom: string) => void;
-  onSortChange: (by: "name" | "score" | "date", order: "asc" | "desc") => void;
+  onSortChange: (by: "name" | "score" | "date" | "number", order: "asc" | "desc") => void;
   onRefresh: () => void;
 }
 
@@ -91,6 +91,8 @@ export default function DashboardFilters({
   }, []);
 
   const sortOptions = [
+    { value: "number-asc", label: "เลขที่ 1 → 99" },
+    { value: "number-desc", label: "เลขที่ 99 → 1" },
     { value: "date-desc", label: "Newest" },
     { value: "date-asc", label: "Oldest" },
     { value: "score-desc", label: "Score High → Low" },
@@ -238,7 +240,7 @@ export default function DashboardFilters({
                   <button
                     key={option.value}
                     onClick={() => {
-                      const [by, order] = option.value.split("-") as ["name" | "score" | "date", "asc" | "desc"];
+                      const [by, order] = option.value.split("-") as ["name" | "score" | "date" | "number", "asc" | "desc"];
                       onSortChange(by, order);
                       setShowSortDropdown(false);
                     }}

@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
   const [selectedExamSetId, setSelectedExamSetId] = useState<string>(searchParams.get("exam") || "");
   const [selectedClassroom, setSelectedClassroom] = useState<string>(searchParams.get("classroom") || "");
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
-  const [sortBy, setSortBy] = useState<"name" | "score" | "date">((searchParams.get("sortBy") as "name" | "score" | "date") || "date");
+  const [sortBy, setSortBy] = useState<"name" | "score" | "date" | "number">((searchParams.get("sortBy") as "name" | "score" | "date" | "number") || "date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">((searchParams.get("sortOrder") as "asc" | "desc") || "desc");
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
 
@@ -114,6 +114,11 @@ export default function AdminDashboardPage() {
           break;
         case "date":
           comparison = new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+          break;
+        case "number":
+          const numA = parseInt(a.studentNumber || "0", 10);
+          const numB = parseInt(b.studentNumber || "0", 10);
+          comparison = numA - numB;
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;
