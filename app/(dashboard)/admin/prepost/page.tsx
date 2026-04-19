@@ -1,67 +1,22 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Icon from "@/components/Icon";
-
-interface Student {
-  studentName: string;
-  studentId: string;
-  classroom: string | null;
-  preScore: number;
-  postScore: number | null;
-  change: number | null;
-  status: 'improved' | 'declined' | 'same' | 'incomplete';
-}
-
-interface Analysis {
-  totalStudents: number;
-  completedBoth: number;
-  preAvg: number;
-  postAvg: number;
-  avgChange: number;
-  improvedCount: number;
-  declinedCount: number;
-  sameCount: number;
-  students: Student[];
-}
-
-interface Pair {
-  pairId: string;
-  pretest: { id: string; title: string; submissionCount: number };
-  posttest: { id: string; title: string; submissionCount: number };
-  analysis: Analysis;
-}
+import { usePrePostAnalysis, type Pair } from "@/lib/hooks";
+import { PrePostPageSkeleton } from "@/components/dashboard/PrePostPageSkeleton";
 
 export default function PrePostAnalysisPage() {
-  const [pairs, setPairs] = useState<Pair[]>([]);
+  const { pairs, isLoading } = usePrePostAnalysis();
   const [selectedPairId, setSelectedPairId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"name" | "change">("change");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch("/api/prepost");
-        if (response.ok) {
-          const data = await response.json();
-          setPairs(data.pairs);
-          if (data.pairs.length > 0) {
-            setSelectedPairId(data.pairs[0].pairId);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching pre-post data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+  // Set default selected pair when data loads
+  const effectivePairId = selectedPairId || (pairs.length > 0 ? pairs[0].pairId : "");
 
   const selectedPair = useMemo(() => {
-    return pairs.find(p => p.pairId === selectedPairId);
-  }, [pairs, selectedPairId]);
+    return pairs.find(p => p.pairId === effectivePairId);
+  }, [pairs, effectivePairId]);
 
   const sortedStudents = useMemo(() => {
     if (!selectedPair) return [];
@@ -80,11 +35,7 @@ export default function PrePostAnalysisPage() {
   }, [selectedPair, sortBy, sortOrder]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Icon name="spinner" size="lg" className="text-indigo-600" />
-      </div>
-    );
+    return <PrePostPageSkeleton />;
   }
 
   if (pairs.length === 0) {
@@ -114,7 +65,7 @@ export default function PrePostAnalysisPage() {
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">เลือกชุดวิเคราะห์</label>
         <select
-          value={selectedPairId}
+          value={effectivePairId}
           onChange={(e) => setSelectedPairId(e.target.value)}
           className="w-full max-w-md px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500"
         >

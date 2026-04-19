@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Icon from "@/components/Icon";
@@ -37,7 +37,7 @@ export default function DashboardGroupLayout({
             <Icon name="menu" size="md" className="text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="MasterExam" className="w-8 h-8" />
+            <img src="/logo-light.svg" alt="MasterExam" className="w-8 h-8" />
             <span className="font-semibold text-gray-900">MasterExam</span>
           </div>
           <div className="w-10" />

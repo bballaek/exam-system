@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 import { useToast } from "@/components/Toast";
 
 interface Question {
@@ -158,11 +159,7 @@ export default function GradeSubmissionPage() {
   }).length || 0;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Icon name="spinner" size="xl" className="text-indigo-600" />
-      </div>
-    );
+    return <LogoLoading size="md" text="กำลังโหลด..." />;
   }
 
   if (error || !submission) {
@@ -253,7 +250,7 @@ export default function GradeSubmissionPage() {
                       </span>
                     )}
                   </div>
-                  <p className="font-medium text-gray-900">{question.text}</p>
+                  <div className="font-medium text-gray-900 quill-content" dangerouslySetInnerHTML={{ __html: question.text }} />
                 </div>
                 <span
                   className={`px-2 py-1 rounded text-xs font-bold ${
@@ -360,7 +357,7 @@ export default function GradeSubmissionPage() {
       </div>
 
       {/* Floating Summary Bar */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 -mx-4 md:-mx-6 px-4 md:px-6 py-4 shadow-lg">
+      <div className="sticky bottom-4 md:bottom-8 bg-white border border-gray-200 rounded-2xl p-4 shadow-xl z-20 mt-8">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-indigo-100 px-4 py-2 rounded-lg">

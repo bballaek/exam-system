@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 
 function ResultContent() {
   const searchParams = useSearchParams();
@@ -311,7 +312,7 @@ export default function ResultPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-surface">
-        <Icon name="spinner" size="lg" className="text-gray-600" />
+        <LogoLoading size="lg" />
       </div>
     }>
       <ResultContent />

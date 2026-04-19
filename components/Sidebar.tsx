@@ -139,12 +139,31 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo Area */}
-      <div className="h-16 flex items-center px-4">
+      <div className="py-4 px-4">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
-          <span className="font-semibold text-[15px] text-gray-900">MasterExam</span>
+          <img src="/logo-light.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
+          <div className="flex flex-col">
+            <span className="font-semibold text-[15px] text-gray-900 leading-tight">MasterExam</span>
+            <span className="text-[11px] text-gray-400 leading-tight">by Aekkarat Wongchalee</span>
+          </div>
         </div>
       </div>
+
+      {/* New Exam Button */}
+      {isLoggedIn && (
+        <div className="px-3 pt-2">
+          <Link
+            href="/admin/exams"
+            onClick={() => setIsMobileOpen(false)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[14px] transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <span>New Exam</span>
+          </Link>
+        </div>
+      )}
 
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">

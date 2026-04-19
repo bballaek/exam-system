@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 // POST create new question
 export async function POST(request: NextRequest) {
@@ -16,6 +14,9 @@ export async function POST(request: NextRequest) {
         options: body.options || ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
         correctAnswers: body.correctAnswers || ["ตัวเลือก ก"],
         subQuestions: body.subQuestions || [],
+        dragOptions: body.dragOptions || [],
+        imageUrl: body.imageUrl || null,
+        optionImages: body.optionImages || [],
         examSetId: body.examSetId,
       },
     });

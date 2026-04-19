@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import Link from "next/link";
+import RichTextEditor from "@/components/RichTextEditor";
 
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 import ImportQuestionsModal from "@/components/ImportQuestionsModal";
 import { useToast } from "@/components/Toast";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 // Types
-type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE";
+type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE" | "CODE_DND" | "IMAGE_CHOICE";
 
 interface Question {
   id: number;
@@ -21,6 +24,10 @@ interface Question {
   options: string[];
   correctAnswers: string[];
   subQuestions: string[];
+  codeTemplate?: string | null; // Code template for CODEMSA / CODE_DND
+  dragOptions?: string[]; // For CODE_DND
+  imageUrl?: string | null; // For IMAGE_CHOICE
+  optionImages?: string[]; // For IMAGE_CHOICE
   examSetId: string;
 }
 
@@ -53,7 +60,11 @@ interface QuestionFormData {
   correctAnswerIndices: number[]; // For CHOICE (multi)
   shortAnswer: string; // For SHORT (comma separated for multi)
   trueFalseAnswer: boolean; // For TRUE_FALSE
-  subQuestions: { question: string; answer: string }[]; // For CODEMSA
+  subQuestions: { question: string; answer: string }[]; // For CODEMSA / CODE_DND
+  codeTemplate: string; // Code template for CODEMSA / CODE_DND
+  dragOptions: { value: string }[]; // For CODE_DND
+  imageUrl: string; // For IMAGE_CHOICE
+  optionImages: { value: string }[]; // For IMAGE_CHOICE
 }
 
 export default function ExamEditorPage() {
@@ -82,8 +93,12 @@ export default function ExamEditorPage() {
   const [pairId, setPairId] = useState("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  // Toggle state for displaying image upload field
+  const [showQuestionImage, setShowQuestionImage] = useState(false);
+  const [showOptionImages, setShowOptionImages] = useState<Record<number, boolean>>({});
+
   // Form setup
-  const { register, handleSubmit, watch, setValue, reset, control } = useForm<QuestionFormData>({
+  const { register, handleSubmit, watch, setValue, getValues, reset, control } = useForm<QuestionFormData>({
     defaultValues: {
       text: "",
       type: "CHOICE",
@@ -96,6 +111,10 @@ export default function ExamEditorPage() {
       shortAnswer: "",
       trueFalseAnswer: true,
       subQuestions: [],
+      codeTemplate: "",
+      dragOptions: [],
+      imageUrl: "",
+      optionImages: [],
     },
   });
 
@@ -109,9 +128,23 @@ export default function ExamEditorPage() {
     name: "subQuestions",
   });
 
+  const { fields: dragOptionFields, append: appendDragOption, remove: removeDragOption } = useFieldArray({
+    control,
+    name: "dragOptions",
+  });
+
+  const { fields: optionImageFields, append: appendOptionImage, remove: removeOptionImage } = useFieldArray({
+    control,
+    name: "optionImages",
+  });
+
   const watchType = watch("type");
 
-  // Fetch exam set
+  // Fetch exam set - only depends on examSetId, NOT selectedQuestionId
+  // This prevents re-fetching the entire exam from DB every time a question is clicked
+  const selectedQuestionIdRef = useRef(selectedQuestionId);
+  selectedQuestionIdRef.current = selectedQuestionId;
+
   const fetchExamSet = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -119,7 +152,8 @@ export default function ExamEditorPage() {
       if (response.ok) {
         const data = await response.json();
         setExamSet(data);
-        if (data.questions.length > 0 && !selectedQuestionId) {
+        // Only auto-select first question if none is currently selected
+        if (data.questions.length > 0 && !selectedQuestionIdRef.current) {
           setSelectedQuestionId(data.questions[0].id);
         }
       }
@@ -128,7 +162,7 @@ export default function ExamEditorPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [examSetId, selectedQuestionId]);
+  }, [examSetId]);
 
   useEffect(() => {
     fetchExamSet();
@@ -199,7 +233,7 @@ export default function ExamEditorPage() {
     
     const formData: QuestionFormData = {
       text: question.text,
-      type: question.type as QuestionType,
+      type: question.type === "IMAGE_CHOICE" ? "CHOICE" : (question.type as QuestionType),
       points: question.points,
       isRequired: question.isRequired ?? true,
       isMultiAnswer: isMulti,
@@ -209,15 +243,29 @@ export default function ExamEditorPage() {
       shortAnswer: question.type === "SHORT" ? question.correctAnswers.join(",") : "",
       trueFalseAnswer: question.type === "TRUE_FALSE" ? question.correctAnswers[0] === "TRUE" : true,
       subQuestions:
-        question.type === "CODEMSA"
+        (question.type === "CODEMSA" || question.type === "CODE_DND")
           ? question.subQuestions.map((sq, i) => ({
               question: sq,
               answer: question.correctAnswers[i] || "",
             }))
           : [],
+      codeTemplate: question.codeTemplate || "",
+      dragOptions: question.dragOptions ? question.dragOptions.map((v) => ({ value: v })) : [],
+      imageUrl: question.imageUrl || "",
+      optionImages: question.optionImages
+        ? question.optionImages.map((v) => ({ value: v }))
+        : Array(question.options.length || 4).fill("").map(() => ({ value: "" })),
     };
 
     reset(formData);
+    setShowQuestionImage(!!question.imageUrl);
+    const initialShowOptionImages: Record<number, boolean> = {};
+    if (question.optionImages) {
+      question.optionImages.forEach((v, i) => {
+        if (v) initialShowOptionImages[i] = true;
+      });
+    }
+    setShowOptionImages(initialShowOptionImages);
   }, [selectedQuestionId, examSet, reset]);
 
   // Save question
@@ -252,11 +300,23 @@ export default function ExamEditorPage() {
         correctAnswers = data.shortAnswer.split(",").map(s => s.trim()).filter(s => s);
       } else if (data.type === "TRUE_FALSE") {
         correctAnswers = [data.trueFalseAnswer ? "TRUE" : "FALSE"];
-      } else if (data.type === "CODEMSA") {
+      } else if (data.type === "CODEMSA" || data.type === "CODE_DND") {
         subQuestions = data.subQuestions.map((sq) => sq.question);
         // Support comma-separated answers for each sub-question
         correctAnswers = data.subQuestions.map((sq) => sq.answer);
+      } else if (data.type === "IMAGE_CHOICE") {
+        // Keep empty strings for IMAGE_CHOICE because the main payload is the image
+        options = data.options.map((o) => o.value);
+        const answerIndex = typeof data.correctAnswerIndex === 'string' 
+            ? parseInt(data.correctAnswerIndex, 10) 
+            : data.correctAnswerIndex;
+        // Fallback to empty string if undefined to satisfy Prisma's String[]
+        correctAnswers = [options[answerIndex] !== undefined ? options[answerIndex] : ""];
       }
+
+      const dragOptions = data.type === "CODE_DND" ? data.dragOptions.map(o => o.value).filter(v => v.trim()) : [];
+      const imageUrl = data.imageUrl || null;
+      const optionImages = data.optionImages ? data.optionImages.map(oi => oi.value) : [];
 
       const response = await fetch(`/api/questions/${selectedQuestionId}`, {
         method: "PATCH",
@@ -269,6 +329,10 @@ export default function ExamEditorPage() {
           options,
           correctAnswers,
           subQuestions,
+          codeTemplate: (data.type === "CODEMSA" || data.type === "CODE_DND") ? data.codeTemplate : null,
+          dragOptions,
+          imageUrl,
+          optionImages,
         }),
       });
 
@@ -334,18 +398,15 @@ export default function ExamEditorPage() {
       case "CHOICE": return "ปรนัย";
       case "SHORT": return "เติมคำ";
       case "CODEMSA": return "โค้ด";
+      case "TRUE_FALSE": return "ถูก/ผิด";
+      case "CODE_DND": return "Drag & Drop";
+      case "IMAGE_CHOICE": return "ตัวเลือกรูปภาพ";
       default: return type;
     }
   };
 
   if (isLoading) {
-    return (
-      <>
-        <div className="flex items-center justify-center min-h-screen">
-          <Icon name="spinner" size="lg" className="text-indigo-600" />
-        </div>
-      </>
-    );
+    return <LogoLoading size="lg" text="กำลังโหลด..." />;
   }
 
   if (!examSet) {
@@ -381,24 +442,23 @@ export default function ExamEditorPage() {
           ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+          <div className="p-4 border-b border-gray-200 lg:pl-12 relative">
+            <div className="flex items-center justify-end gap-2">
               <Link
                 href="/admin/exams"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all"
               >
                 <Icon name="arrow-left" size="sm" />
                 Back
               </Link>
-              {/* Close button for mobile */}
               <button
                 onClick={() => setShowMobileSidebar(false)}
-                className="md:hidden p-1 text-gray-400 hover:text-gray-600"
+                className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
               >
                 <Icon name="close" size="sm" />
               </button>
             </div>
-            <h2 className="font-bold text-gray-900 truncate mt-3">{examSet.title}</h2>
+            <h2 className="font-bold text-gray-900 truncate mt-3 pr-2">{examSet.title}</h2>
             <p className="text-xs text-gray-500 mt-1">
               {examSet.questions.length} คำถาม
             </p>
@@ -465,7 +525,7 @@ export default function ExamEditorPage() {
                         </span>
                       </div>
                       <p className="text-sm text-gray-700 mt-1 line-clamp-2">
-                        {question.text || "ไม่มีข้อความ"}
+                        {question.text?.replace(/<[^>]+>/g, '') || "ไม่มีข้อความ"}
                       </p>
                     </div>
                     <button
@@ -535,12 +595,17 @@ export default function ExamEditorPage() {
                       <div className="relative">
                         <select
                           {...register("type")}
+                          onChange={(e) => {
+                            setValue("type", e.target.value as QuestionType);
+                            // Auto toggle image options if switching back and forth, or just leave it
+                          }}
                           className="appearance-none px-4 py-2 pr-8 border-0 text-sm font-medium text-gray-700 focus:ring-0 focus:outline-none cursor-pointer bg-white min-w-[140px]"
                         >
                           <option value="CHOICE">Multiple choice</option>
                           <option value="TRUE_FALSE">True/False</option>
                           <option value="SHORT">Fill in the Blank</option>
                           <option value="CODEMSA">Code</option>
+                          <option value="CODE_DND">Code Drag & Drop</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                           <Icon name="chevron-down" size="xs" className="text-gray-400" />
@@ -568,10 +633,23 @@ export default function ExamEditorPage() {
                     </div>
                   </div>
                   
-                  {/* Required Toggle */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Required</span>
+                  <div className="flex items-center gap-4">
+                    {/* Image Toggle Button */}
                     <button
+                      type="button"
+                      onClick={() => setShowQuestionImage(!showQuestionImage)}
+                      className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
+                        showQuestionImage ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+                      }`}
+                      title="Add image to question"
+                    >
+                      <Icon name="image" size="sm" />
+                    </button>
+                    
+                    {/* Required Toggle */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Required</span>
+                      <button
                       type="button"
                       onClick={() => setValue("isRequired", !watch("isRequired"))}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
@@ -583,7 +661,8 @@ export default function ExamEditorPage() {
                           watch("isRequired") ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
-                    </button>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -592,12 +671,30 @@ export default function ExamEditorPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Question Text {watch("isRequired") && <span className="text-red-500">*</span>}
                   </label>
-                  <textarea
-                    {...register("text")}
-                    rows={3}
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                    placeholder="พิมพ์คำถาม..."
+                  <Controller
+                    name="text"
+                    control={control}
+                    render={({ field }) => (
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Write your question here..."
+                      />
+                    )}
                   />
+                  {showQuestionImage && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        รูปภาพประกอบโจทย์ (ถ้ามี)
+                      </label>
+                      <ImageUpload
+                        value={watch("imageUrl") || ""}
+                        onChange={(url) => setValue("imageUrl", url)}
+                        className="h-48 w-full md:w-1/2 lg:w-1/3"
+                        placeholder="อัปโหลดรูปภาพโจทย์"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Dynamic Fields based on Type */}
@@ -667,33 +764,64 @@ export default function ExamEditorPage() {
                         };
                         
                         return (
-                          <div key={field.id} className="flex items-center gap-3">
-                            <input
-                              type={isMulti ? "checkbox" : "radio"}
-                              name="correctAnswer"
-                              checked={isChecked}
-                              onChange={handleSelect}
-                              className={`w-5 h-5 ${isMulti ? 'text-indigo-600 rounded' : 'text-indigo-600'} border-gray-300 focus:ring-indigo-500`}
-                            />
-                            <input
-                              {...register(`options.${index}.value`)}
-                              className={`flex-1 px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                                isChecked ? "border-indigo-300 bg-indigo-50" : "border-gray-200"
-                              }`}
-                              placeholder={`Option ${index + 1}`}
-                            />
-                            <button type="button" className="p-1 text-gray-300 hover:text-gray-400">
-                              <Icon name="menu" size="sm" />
-                            </button>
-                            {optionFields.length > 2 && (
-                              <button
-                                type="button"
-                                onClick={() => removeOption(index)}
-                                className="p-1 text-gray-400 hover:text-red-500"
-                              >
-                                <Icon name="trash" size="sm" />
-                              </button>
-                            )}
+                          <div key={field.id} className="flex flex-col gap-2">
+                            <div className="flex items-start gap-3">
+                              <div className="pt-2">
+                                <input
+                                  type={isMulti ? "checkbox" : "radio"}
+                                  name="correctAnswer"
+                                  checked={isChecked}
+                                  onChange={handleSelect}
+                                  className={`w-5 h-5 ${isMulti ? 'text-indigo-600 rounded' : 'text-indigo-600'} border-gray-300 focus:ring-indigo-500`}
+                                />
+                              </div>
+                              <div className="flex-1 space-y-2">
+                                <div className="relative">
+                                  <input
+                                    {...register(`options.${index}.value`)}
+                                    className={`w-full pr-10 pl-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                                      isChecked ? "border-indigo-300 bg-indigo-50" : "border-gray-200"
+                                    }`}
+                                    placeholder={`Option ${index + 1}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionImages(prev => ({ ...prev, [index]: !prev[index] }))}
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-colors ${
+                                      showOptionImages[index] || watch(`optionImages.${index}.value`) ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                    title="Add image to option"
+                                  >
+                                    <Icon name="image" size="sm" />
+                                  </button>
+                                </div>
+                                {(showOptionImages[index] || watch(`optionImages.${index}.value`)) && (
+                                  <ImageUpload
+                                    value={watch(`optionImages.${index}.value`) || ""}
+                                    onChange={(url) => setValue(`optionImages.${index}.value`, url)}
+                                    className="h-32 w-full md:w-48 bg-white border-gray-200"
+                                    placeholder={`รูปภาพตัวเลือก ${index + 1}`}
+                                  />
+                                )}
+                              </div>
+                              <div className="pt-1.5 flex items-center gap-1">
+                                <button type="button" className="p-1 text-gray-300 hover:text-gray-400 cursor-move">
+                                  <Icon name="menu" size="sm" />
+                                </button>
+                                {optionFields.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      removeOption(index);
+                                      if (removeOptionImage) removeOptionImage(index);
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-red-500"
+                                  >
+                                    <Icon name="trash" size="sm" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
                       })}
@@ -701,7 +829,10 @@ export default function ExamEditorPage() {
                     {optionFields.length < 6 && (
                       <button
                         type="button"
-                        onClick={() => appendOption({ value: "" })}
+                        onClick={() => {
+                          appendOption({ value: "" });
+                          if (appendOptionImage) appendOptionImage({ value: "" });
+                        }}
                         className="mt-4 flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 border border-dashed border-gray-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
                       >
                         <Icon name="plus" size="sm" />
@@ -710,6 +841,7 @@ export default function ExamEditorPage() {
                     )}
                   </div>
                 )}
+
 
                 {watchType === "SHORT" && (
                   <div>
@@ -762,46 +894,176 @@ export default function ExamEditorPage() {
                 )}
 
                 {watchType === "CODEMSA" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      คำถามย่อยและคำตอบ
-                    </label>
-                    <div className="space-y-3">
-                      {subQuestionFields.map((field, index) => (
-                        <div key={field.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                          <span className="mt-2 w-6 h-6 flex items-center justify-center bg-indigo-100 text-indigo-600 rounded text-sm font-bold">
-                            {index + 1}
-                          </span>
-                          <div className="flex-1 space-y-2">
-                            <input
-                              {...register(`subQuestions.${index}.question`)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder="คำถามย่อย..."
-                            />
-                            <input
-                              {...register(`subQuestions.${index}.answer`)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder="คำตอบ..."
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeSubQ(index)}
-                            className="p-2 text-gray-400 hover:text-red-500"
-                          >
-                            <Icon name="trash" size="sm" />
-                          </button>
-                        </div>
-                      ))}
+                  <div className="space-y-6">
+                    {/* Code Template */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Code Template <span className="text-red-500">*</span>
+                      </label>
+                      
+                      <textarea
+                        {...register("codeTemplate")}
+                        rows={8}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y bg-gray-50"
+                        placeholder={`if (L < THRESHOLD && ___(1)___) {\n  motor(1, ___(2)___);\n}`}
+                      />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => appendSubQ({ question: "", answer: "" })}
-                      className="mt-3 flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
-                    >
-                      <Icon name="plus" size="sm" />
-                      Add Sub Question
-                    </button>
+                    
+                    {/* Sub Questions */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Sub Questions and Answers
+                      </label>
+                      <div className="space-y-3">
+                        {subQuestionFields.map((field, index) => (
+                          <div key={field.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span className="mt-2 w-6 h-6 flex items-center justify-center bg-indigo-100 text-indigo-600 rounded text-sm font-bold">
+                              {index + 1}
+                            </span>
+                            <div className="flex-1 space-y-2">
+                              <input
+                                {...register(`subQuestions.${index}.question`)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="เติมโค้ดในหมายเลข (1)"
+                              />
+                              <input
+                                {...register(`subQuestions.${index}.answer`)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="คำตอบ..."
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeSubQ(index)}
+                              className="p-2 text-gray-400 hover:text-red-500"
+                            >
+                              <Icon name="trash" size="sm" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => appendSubQ({ question: "", answer: "" })}
+                        className="mt-3 flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
+                      >
+                        <Icon name="plus" size="sm" />
+                        Add Sub Question
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {watchType === "CODE_DND" && (
+                  <div className="space-y-6">
+                    {/* Code Template */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Code Template <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Write <code className="bg-gray-100 px-1 font-bold rounded">____</code> or <code className="bg-gray-100 px-1 font-bold rounded">[blank]</code> to create a blank space for the answer.
+                      </p>
+                      <textarea
+                        {...register("codeTemplate")}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setValue("codeTemplate", val, { shouldDirty: true });
+                          // Auto extract blanks: matching ____ or ------- or [blankn] or blankn
+                          const blankMatches = val.match(/(_{3,}|-{3,}|\\[blank\\d*\\]|blank\\d+)/gi) || [];
+                          
+                          const currentSubQs = getValues("subQuestions") || [];
+                          // Adjust length
+                          if (blankMatches.length > currentSubQs.length) {
+                             // append
+                             const toAdd = blankMatches.length - currentSubQs.length;
+                             for (let i = 0; i < toAdd; i++) {
+                               appendSubQ({ question: `ช่องว่างที่ ${currentSubQs.length + i + 1}`, answer: "" });
+                             }
+                          } else if (blankMatches.length < currentSubQs.length) {
+                             // remove from end
+                             const toRemove = currentSubQs.length - blankMatches.length;
+                             for (let i = 0; i < toRemove; i++) {
+                               removeSubQ(currentSubQs.length - 1 - i);
+                             }
+                          }
+                          // Update questions names to reflect order
+                          const updatedSubQs = getValues("subQuestions");
+                          updatedSubQs.forEach((_: any, i: number) => {
+                            setValue(`subQuestions.${i}.question`, `ช่องว่างที่ ${i + 1}`);
+                          });
+                        }}
+                        rows={8}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y bg-gray-50 bg-white"
+                        placeholder={`score = 60\n____ score < 50:\n    print("Fail")\n____:\n    print("____")`}
+                      />
+                    </div>
+                    
+                    {/* Sub Questions (Answers for blanks) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Answers for each blank
+                      </label>
+                      <div className="space-y-3">
+                        {subQuestionFields.length === 0 && (
+                          <div className="p-4 bg-gray-50 border border-gray-200 border-dashed rounded-lg text-center text-sm text-gray-500">
+                            พิมพ์ <code className="bg-gray-200 px-1 rounded">____</code> ในโค้ด Template เพื่อสร้างช่่องคำตอบ
+                          </div>
+                        )}
+                        {subQuestionFields.map((field, index) => (
+                          <div key={field.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span className="mt-2 w-6 h-6 flex items-center justify-center bg-indigo-100 text-indigo-600 rounded text-sm font-bold">
+                              {index + 1}
+                            </span>
+                            <div className="flex-1 space-y-2">
+                              {/* Keep question hidden or use it as label */}
+                              <input
+                                type="hidden"
+                                {...register(`subQuestions.${index}.question`)}
+                              />
+                              <input
+                                {...register(`subQuestions.${index}.answer`)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder={`คำตอบที่ถูกต้องสำหรับช่องว่างที่ ${index + 1}`}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Drag Options (Including distractors) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        ตัวเลือกสำหรับลากวาง (เพิ่มตัวหลอกได้)
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {dragOptionFields.map((field, index) => (
+                          <div key={field.id} className="flex items-center gap-2">
+                            <input
+                              {...register(`dragOptions.${index}.value`)}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="เช่น motor(1, 50)"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeDragOption(index)}
+                              className="p-2 text-gray-400 hover:text-red-500"
+                            >
+                              <Icon name="trash" size="sm" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => appendDragOption({ value: "" })}
+                        className="mt-3 flex items-center gap-2 px-4 py-2 text-sm border border-dashed text-indigo-600 hover:bg-indigo-50 border-gray-300 rounded-lg hover:border-indigo-400 transition-colors"
+                      >
+                        <Icon name="plus" size="sm" />
+                        เพิ่มตัวเลือกลากวาง
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -34,6 +34,38 @@
   animation: slide-in 0.3s ease-out forwards;
 }
 
+/* Logo Loading - Dot Bounce */
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.logo-loading-dot {
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+/* Logo Loading - Subtle Pulse */
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.logo-loading-pulse {
+  animation: logo-pulse 2s ease-in-out infinite;
+}
+
 /* ============================================
    🎨 THEME SYSTEM - CSS Custom Properties
    ============================================ */
@@ -508,4 +540,27 @@ select.input {
     --text-xl: 1.125rem;
     --spacing-md: 1.25rem;
   }
+}
+
+/* ===== Quill Content Styling ===== */
+.quill-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.quill-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.quill-content strong, .quill-content b {
+  font-weight: 700;
+}
+.quill-content em, .quill-content i {
+  font-style: italic;
+}
+.quill-content u {
+  text-decoration: underline;
 }

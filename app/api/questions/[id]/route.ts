@@ -49,6 +49,10 @@ export async function PATCH(
         correctAnswers: body.correctAnswers,
         subQuestions: body.subQuestions,
         isRequired: body.isRequired,
+        codeTemplate: body.codeTemplate,
+        dragOptions: body.dragOptions,
+        imageUrl: body.imageUrl,
+        optionImages: body.optionImages,
       },
     });
 

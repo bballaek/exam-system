@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 import { useToast } from "@/components/Toast";
 import { createExamSession, updateExamSession, deleteExamSession } from "@/lib/exam-session";
 
 // Types
-type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE";
+type QuestionType = "CHOICE" | "SHORT" | "CODEMSA" | "TRUE_FALSE" | "CODE_DND" | "IMAGE_CHOICE";
 
 interface Question {
   id: number;
@@ -16,6 +17,10 @@ interface Question {
   points: number;
   options: string[];
   subQuestions: string[];
+  codeTemplate?: string | null;
+  dragOptions?: string[];
+  imageUrl?: string | null;
+  optionImages?: string[];
 }
 
 interface ExamSet {
@@ -103,9 +108,7 @@ export default function PublicExamPage() {
   // Start exam confirmation modal
   const [showStartConfirm, setShowStartConfirm] = useState(false);
   
-  // Execution status for CODEMSA
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [execOutput, setExecOutput] = useState<{ stdout: string; stderr: string; success?: boolean } | null>(null);
+
 
   // Session tracking for real-time monitoring
   const sessionIdRef = useRef<string | null>(null);
@@ -376,41 +379,6 @@ export default function PublicExamPage() {
       newAnswers[currentQuestionIndex] = answer;
       return newAnswers;
     });
-    // Reset execution output when answer changes
-    setExecOutput(null);
-  };
-
-  const handleRunCode = async (question: Question, answers: string[]) => {
-    setIsExecuting(true);
-    setExecOutput(null);
-    try {
-      // Assemble the code
-      let assembledCode = question.text;
-      question.subQuestions.forEach((subQ, i) => {
-        const val = answers[i] || "";
-        // Escape backslashes in user input to prevent regex issues if we used regex, 
-        // but here we just use split/join for simple exact match replacement
-        assembledCode = assembledCode.split(subQ).join(val);
-      });
-
-      const response = await fetch("/api/run-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: assembledCode, language: "python" }),
-      });
-      
-      const result = await response.json();
-      setExecOutput(result);
-      if (result.success) {
-        toast.showToast("success", "รันโค้ดสำเร็จ");
-      } else {
-        toast.showToast("error", "รันโค้ดผิดพลาด");
-      }
-    } catch (err) {
-      toast.showToast("error", "ไม่สามารถรันโค้ดได้");
-    } finally {
-      setIsExecuting(false);
-    }
   };
 
   const handleSubmit = useCallback(async () => {
@@ -489,10 +457,7 @@ export default function PublicExamPage() {
   if (isLoading) {
     return (
       <div className={containerClass}>
-        <div className="text-center">
-          <Icon name="spinner" size="xl" className="text-indigo-600 mb-4" />
-          <p className="text-gray-600">กำลังโหลดข้อสอบ...</p>
-        </div>
+        <LogoLoading size="lg" text="กำลังโหลดข้อสอบ..." />
       </div>
     );
   }
@@ -659,8 +624,11 @@ export default function PublicExamPage() {
                   CHOICE: examSet.questions.filter(q => q.type === "CHOICE").length,
                   SHORT: examSet.questions.filter(q => q.type === "SHORT").length,
                   CODEMSA: examSet.questions.filter(q => q.type === "CODEMSA").length,
+                  TRUE_FALSE: examSet.questions.filter(q => q.type === "TRUE_FALSE").length,
+                  CODE_DND: examSet.questions.filter(q => q.type === "CODE_DND").length,
+                  IMAGE_CHOICE: examSet.questions.filter(q => q.type === "IMAGE_CHOICE").length,
                 };
-                const hasTypes = typeCounts.CHOICE > 0 || typeCounts.SHORT > 0 || typeCounts.CODEMSA > 0;
+                const hasTypes = Object.values(typeCounts).some(count => count > 0);
                 
                 return hasTypes ? (
                   <div className="mb-6">
@@ -684,7 +652,25 @@ export default function PublicExamPage() {
                       {typeCounts.CODEMSA > 0 && (
                         <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-purple-50 text-purple-700 border border-purple-200">
                           <span className="w-2 h-2 rounded-full bg-purple-500" />
-                          โค้ด {typeCounts.CODEMSA} ข้อ
+                          พิมพ์โค้ด {typeCounts.CODEMSA} ข้อ
+                        </span>
+                      )}
+                      {typeCounts.TRUE_FALSE > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-teal-50 text-teal-700 border border-teal-200">
+                          <span className="w-2 h-2 rounded-full bg-teal-500" />
+                          ถูก/ผิด {typeCounts.TRUE_FALSE} ข้อ
+                        </span>
+                      )}
+                      {typeCounts.CODE_DND > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                          <span className="w-2 h-2 rounded-full bg-orange-500" />
+                          ลากวางโค้ด {typeCounts.CODE_DND} ข้อ
+                        </span>
+                      )}
+                      {typeCounts.IMAGE_CHOICE > 0 && (
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-pink-50 text-pink-700 border border-pink-200">
+                          <span className="w-2 h-2 rounded-full bg-pink-500" />
+                          รูปภาพ {typeCounts.IMAGE_CHOICE} ข้อ
                         </span>
                       )}
                     </div>
@@ -1013,39 +999,71 @@ export default function PublicExamPage() {
               {/* Question Header */}
               <div className="bg-muted border-b border-border px-6 py-4 flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-gray-800">ข้อที่ {currentQuestionIndex + 1}</h2>
-                <span className="text-xs text-gray-400 font-medium">{currentQuestion.type === "CHOICE" ? "ปรนัย" : currentQuestion.type === "SHORT" ? "เติมคำตอบ" : "Coding"}</span>
+                <span className="text-xs text-gray-400 font-medium">
+                  {currentQuestion.type === "CHOICE" ? "ปรนัย" : 
+                   currentQuestion.type === "SHORT" ? "เติมคำตอบ" : 
+                   currentQuestion.type === "CODEMSA" ? "Coding" : 
+                   currentQuestion.type === "TRUE_FALSE" ? "ถูก/ผิด" : 
+                   currentQuestion.type === "CODE_DND" ? "ลาก/วาง โค้ด" : 
+                   currentQuestion.type === "IMAGE_CHOICE" ? "รูปภาพ" : currentQuestion.type}
+                </span>
               </div>
 
               {/* Question Content */}
               <div className="px-6 py-5 flex-grow overflow-y-auto">
-                {currentQuestion.type === "CODEMSA" ? (
-                  <pre className="mb-6 p-4 bg-gray-900 text-gray-200 rounded-lg font-mono text-sm whitespace-pre-wrap">{currentQuestion.text}</pre>
+                {currentQuestion.type === "CODEMSA" || currentQuestion.type === "CODE_DND" ? (
+                  <div className="mb-6">
+                    {currentQuestion.imageUrl && (
+                      <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden max-w-lg">
+                        <img src={currentQuestion.imageUrl} alt="Question" className="w-full h-auto object-contain" />
+                      </div>
+                    )}
+                    <div className="text-gray-700 leading-relaxed text-base mb-4 quill-content" dangerouslySetInnerHTML={{ __html: currentQuestion.text }} />
+                    {currentQuestion.type === "CODEMSA" && (currentQuestion.codeTemplate || currentQuestion.text) && (
+                      <pre className="p-4 bg-gray-900 text-gray-200 rounded-lg font-mono text-sm whitespace-pre-wrap">
+                        {currentQuestion.codeTemplate || currentQuestion.text}
+                      </pre>
+                    )}
+                  </div>
                 ) : (
                   <div className="mb-6">
-                    <p className="text-gray-700 leading-relaxed text-base">{currentQuestion.text}</p>
+                    {currentQuestion.imageUrl && (
+                      <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden max-w-lg">
+                        <img src={currentQuestion.imageUrl} alt="Question" className="w-full h-auto object-contain" />
+                      </div>
+                    )}
+                    <div className="text-gray-700 leading-relaxed text-base quill-content" dangerouslySetInnerHTML={{ __html: currentQuestion.text }} />
                   </div>
                 )}
 
                 {/* Options */}
                 <div className="space-y-3">
-                  {currentQuestion.type === "CHOICE" && currentQuestion.options?.map((opt, i) => {
+                  {(currentQuestion.type === "CHOICE" || currentQuestion.type === "IMAGE_CHOICE") && currentQuestion.options?.map((opt, i) => {
                     const isSelected = userAnswers[currentQuestionIndex] === opt;
+                    const optionImage = currentQuestion.optionImages?.[i];
                     return (
                       <button
                         key={i}
                         onClick={() => saveAnswer(opt)}
-                        className={`w-full flex items-center p-4 rounded-lg border cursor-pointer transition-all duration-200 group text-left ${
+                        className={`w-full flex items-start p-4 rounded-xl border cursor-pointer transition-all duration-200 group text-left ${
                           isSelected 
-                            ? "border-gray-900 bg-gray-50" 
+                            ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600" 
                             : "border-border bg-card hover:border-gray-400"
                         }`}
                       >
-                        <span className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm font-bold mr-4 flex-shrink-0 transition-colors ${
-                          isSelected ? "bg-gray-900 text-white border-gray-900" : "text-gray-400 border-border group-hover:border-gray-400"
+                        <div className={`w-8 h-8 mt-0.5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors mr-4 ${
+                          isSelected ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 text-gray-400 group-hover:border-gray-400"
                         }`}>
-                          {optionLabels[i]}
-                        </span>
-                        <span className="text-gray-700 font-medium text-sm">{opt}</span>
+                          <span className="text-sm font-bold">{optionLabels[i]}</span>
+                        </div>
+                        <div className="flex-1 flex flex-col gap-3">
+                          {optionImage && (
+                            <div className="w-full max-w-xs rounded-lg border border-gray-200 overflow-hidden bg-white flex items-center justify-center p-2">
+                              <img src={optionImage} alt={`Option ${i+1}`} className="max-h-40 w-auto object-contain" />
+                            </div>
+                          )}
+                          {opt && <span className="text-gray-700 font-medium text-sm leading-relaxed">{opt}</span>}
+                        </div>
                       </button>
                     );
                   })}
@@ -1074,34 +1092,91 @@ export default function PublicExamPage() {
                     );
                   })}
 
-                  {currentQuestion.type === "CODEMSA" && (
-                    <div className="mt-4 space-y-3">
-                      <button
-                        onClick={() => handleRunCode(currentQuestion, (userAnswers[currentQuestionIndex] as string[]) || [])}
-                        disabled={isExecuting}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                      >
-                        {isExecuting ? <Icon name="spinner" size="sm" className="animate-spin" /> : <Icon name="play" size="sm" />}
-                        ทดสอบรันโค้ด
-                      </button>
+                  {currentQuestion.type === "CODE_DND" && (
+                    <div className="space-y-6">
+                      {/* Code with Inline Drop Zones */}
+                      <div className="bg-gray-900 rounded-xl p-4 md:p-6 overflow-x-auto text-sm md:text-base font-mono leading-relaxed text-gray-200">
+                        {(() => {
+                          const template = currentQuestion.codeTemplate || currentQuestion.text;
+                          // Split text by blanks (matching ____ or ------- or [blankn] or blankn)
+                          const parts = template.split(/(_{3,}|-{3,}|\\[blank\\d*\\]|blank\\d+)/gi);
+                          let blankIndex = 0;
+                          
+                          return parts.map((part, i) => {
+                            const isBlank = /^(_{3,}|-{3,}|\\[blank\\d*\\]|blank\\d+)$/i.test(part);
+                            if (isBlank) {
+                              const bIndex = blankIndex++;
+                              const answers = (userAnswers[currentQuestionIndex] as string[]) || [];
+                              const currentAnswer = answers[bIndex] || "";
+                              
+                              return (
+                                <span
+                                  key={`blank-${bIndex}`}
+                                  className={`inline-flex items-center justify-center min-w-[4rem] min-h-[2.5rem] px-3 py-1 mx-1 border-2 rounded-lg align-middle transition-all cursor-pointer shadow-sm ${
+                                    currentAnswer 
+                                      ? 'border-indigo-400 text-indigo-100 bg-indigo-600 font-bold border-solid shadow-md transform -translate-y-0.5' 
+                                      : 'border-dashed border-gray-400 text-gray-400 bg-gray-800 hover:bg-gray-700 hover:border-gray-300 hover:text-gray-300'
+                                  }`}
+                                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-indigo-400', 'bg-indigo-900/50'); }}
+                                  onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-900/50'); }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-900/50');
+                                    const data = e.dataTransfer.getData("text/plain");
+                                    if (data) {
+                                      const newAnswers = [...answers];
+                                      newAnswers[bIndex] = data;
+                                      saveAnswer(newAnswers);
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    // Click to remove answer
+                                    if (currentAnswer) {
+                                      e.stopPropagation();
+                                      const newAnswers = [...answers];
+                                      newAnswers[bIndex] = "";
+                                      saveAnswer(newAnswers);
+                                    }
+                                  }}
+                                  title={currentAnswer ? "คลิกเพื่อลบคำตอบ" : "ลากคำตอบมาวางที่นี่"}
+                                >
+                                  {currentAnswer ? currentAnswer : "    "}
+                                </span>
+                              );
+                            }
+                            return <span key={`text-${i}`}>{part}</span>;
+                          });
+                        })()}
+                      </div>
 
-                      {execOutput && (
-                        <div className={`mt-3 p-4 rounded-lg font-mono text-xs border ${execOutput.success ? "bg-gray-900 border-green-500/50" : "bg-red-900/10 border-red-500/50"}`}>
-                          <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
-                            <span className={execOutput.success ? "text-green-400" : "text-red-400 font-bold"}>
-                              {execOutput.success ? "✓ Output:" : "✗ Error:"}
-                            </span>
-                            <button onClick={() => setExecOutput(null)} className="text-gray-500 hover:text-white">
-                              <Icon name="close" size="xs" />
-                            </button>
-                          </div>
-                          {execOutput.stdout && <pre className="text-gray-300 whitespace-pre-wrap">{execOutput.stdout}</pre>}
-                          {execOutput.stderr && <pre className="text-red-400 whitespace-pre-wrap mt-2">{execOutput.stderr}</pre>}
-                          {!execOutput.stdout && !execOutput.stderr && <span className="text-gray-500 italic">ไม่มี Output</span>}
+                      {/* Draggable Options */}
+                      <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                          <Icon name="menu" size="sm" className="text-gray-400" />
+                          Select your answer from below (drag and drop).
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentQuestion.dragOptions?.map((opt, i) => (
+                            <div 
+                              key={i}
+                              draggable
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData("text/plain", opt);
+                                e.dataTransfer.effectAllowed = "copy";
+                              }}
+                              className="cursor-grab active:cursor-grabbing px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-sm rounded-lg shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 select-none"
+                            >
+                              {opt}
+                            </div>
+                          ))}
+                          {(!currentQuestion.dragOptions || currentQuestion.dragOptions.length === 0) && (
+                            <span className="text-gray-500 text-sm italic">ไม่มีตัวเลือกที่กำหนดไว้</span>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
+
 
                   {currentQuestion.type === "TRUE_FALSE" && (
                     <div className="flex gap-4">

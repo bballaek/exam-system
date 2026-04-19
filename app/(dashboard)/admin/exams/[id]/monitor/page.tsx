@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 import { subscribeToExamSessions, ExamSession } from "@/lib/exam-session";
 
 export default function ExamMonitorPage() {
@@ -90,11 +91,7 @@ export default function ExamMonitorPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Icon name="spinner" size="lg" className="text-gray-600" />
-      </div>
-    );
+    return <LogoLoading size="lg" text="กำลังโหลด..." />;
   }
 
   return (

@@ -45,7 +45,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-xl mb-4 shadow-sm border border-gray-100">
-            <img src="/logo.svg" alt="MasterExam" className="w-10 h-10" />
+            <img src="/logo-light.svg" alt="MasterExam" className="w-10 h-10" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">MasterExam</h1>
           <p className="text-gray-500 mt-1">เข้าสู่ระบบสำหรับผู้ดูแล</p>

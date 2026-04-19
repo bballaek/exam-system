@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/Icon";
+import LogoLoading from "@/components/LogoLoading";
 import { useExamSets } from "@/lib/hooks/useExamSets";
 import { useSubmissions } from "@/lib/hooks/useSubmissions";
 import { useToast } from "@/components/Toast";
@@ -397,9 +398,7 @@ export default function LearnersPage() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-20">
-          <Icon name="spinner" size="lg" className="text-indigo-600" />
-        </div>
+        <LogoLoading size="md" text="กำลังโหลด..." />
       )}
 
       {/* Overview Tab Content */}

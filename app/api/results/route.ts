@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
             title: true
           }
         },
-        answers: true
+        _count: {
+          select: {
+            answers: true
+          }
+        }
       }
     });
 
@@ -39,7 +43,7 @@ export async function GET(request: NextRequest) {
       examTitle: sub.examSet.title,
       examSetId: sub.examSetId,
       submittedAt: sub.submittedAt.toISOString(),
-      answerCount: sub.answers.length
+      answerCount: sub._count?.answers || 0
     }));
 
     return NextResponse.json({

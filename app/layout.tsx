@@ -10,10 +10,10 @@ const ibmPlexSansThai = IBM_Plex_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "MasterExam | ระบบจัดการข้อสอบออนไลน์",
-  description: "ระบบจัดการข้อสอบออนไลน์สำหรับครูและนักเรียน",
+  title: "Exam | Aekkarat Workspace",
+  description: "Eco system for education",
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo-light.svg",
   },
 };
 

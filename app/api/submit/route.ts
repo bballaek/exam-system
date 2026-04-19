@@ -128,22 +128,23 @@ export async function POST(request: NextRequest) {
       
       let isCorrect = false;
 
-      if (question.type === 'CODEMSA') {
-        // CODEMSA: Check if we can use sandbox
+      if (question.type === 'CODEMSA' || question.type === 'CODE_DND') {
+        // CODEMSA/CODE_DND: Check if we can use sandbox
         if (Array.isArray(userAnswer) && question.subQuestions.length > 0) {
           // 1. Try String matching first (fast)
           isCorrect = arraysMatch(userAnswer, question.correctAnswers);
           
           // 2. If string match fails, try Sandbox execution (Golden Output comparison)
           if (!isCorrect) {
+            const template = question.codeTemplate || question.text;
             // Assemble student code
-            let studentCode = question.text;
+            let studentCode = template;
             question.subQuestions.forEach((subQ, idx) => {
               studentCode = studentCode.split(subQ).join(String(userAnswer[idx] || ''));
             });
 
             // Assemble golden code (using correctAnswers)
-            let goldenCode = question.text;
+            let goldenCode = template;
             question.subQuestions.forEach((subQ, idx) => {
               goldenCode = goldenCode.split(subQ).join(String(question.correctAnswers[idx] || ''));
             });
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        // CHOICE or SHORT: Compare single answer with correctAnswers[0]
+        // CHOICE, IMAGE_CHOICE, SHORT or TRUE_FALSE: Compare single answer with correctAnswers[0]
         if (typeof userAnswer === 'string' && correctAnswers.length > 0) {
           isCorrect = normalizeAnswer(userAnswer) === normalizeAnswer(correctAnswers[0]);
         }

@@ -33,8 +33,9 @@ model ExamSet {
   examType  String  @default("general") // 'general' | 'pretest' | 'posttest'
   pairId    String? // ID สำหรับจับคู่ pre-post (เช่น "unit-1")
   
-  questions   Question[]
-  submissions ExamSubmission[]
+  questions    Question[]
+  submissions  ExamSubmission[]
+  examSessions ExamSession[]
 
   // Indexes for performance
   @@index([isActive, createdAt])
@@ -46,13 +47,21 @@ model ExamSet {
 model Question {
   id             Int      @id @default(autoincrement())
   text           String   // โจทย์
-  type           String   // 'CHOICE', 'SHORT', 'CODEMSA'
+  type           String   // 'CHOICE', 'SHORT', 'CODEMSA', 'TRUE_FALSE', 'CODE_DND', 'IMAGE_CHOICE'
   points         Int      @default(1)
   isRequired     Boolean  @default(true)  // คำถามบังคับตอบหรือไม่
   
   options        String[] // ตัวเลือก (ถ้ามี)
   correctAnswers String[] // เฉลย
   subQuestions   String[] // โจทย์ย่อย (สำหรับ CodeMSA)
+  codeTemplate   String?  // โค้ด template (สำหรับ CodeMSA / CODE_DND ใช้แยก code จาก question text)
+  
+  // CODE_DND fields
+  dragOptions    String[] // ตัวเลือกทั้งหมดที่จะลาก (รวม distractors)
+  
+  // Image fields (IMAGE_CHOICE + general)
+  imageUrl       String?  // รูปภาพประกอบโจทย์
+  optionImages   String[] // รูปภาพของแต่ละตัวเลือก
   
   examSetId      String
   examSet        ExamSet  @relation(fields: [examSetId], references: [id])
@@ -105,4 +114,26 @@ model StudentAnswer {
 
   // Indexes for performance
   @@index([submissionId, questionId])
+}
+
+// 5. ตารางเก็บ Session สถานะการสอบแบบ Real-time
+model ExamSession {
+  id               String   @id @default(uuid())
+  examSetId        String   @map("exam_set_id")
+  studentName      String   @map("student_name")
+  studentId        String   @map("student_id")
+  classroom        String?
+  currentQuestion  Int      @map("current_question")
+  totalQuestions   Int      @map("total_questions")
+  timeRemaining    Int?     @map("time_remaining")
+  warnings         Int      @default(0)
+  status           String   @default("active") // "active" | "submitted" | "kicked"
+  lastWarning      String?  @map("last_warning")
+  startedAt        DateTime @default(now()) @map("started_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  examSet          ExamSet  @relation(fields: [examSetId], references: [id], onDelete: Cascade)
+
+  @@index([examSetId, status])
+  @@map("exam_sessions")
 }

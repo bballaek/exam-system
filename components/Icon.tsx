@@ -49,11 +49,13 @@ import {
   Play,
   List,
   FileText,
+  Image,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type IconName =
+  | 'image'
   | 'check-circle'
   | 'warning'
   | 'error'
@@ -111,6 +113,7 @@ interface IconProps {
 }
 
 const iconMap: Record<IconName, LucideIcon> = {
+  'image': Image,
   'check-circle': CheckCircle,
   'warning': Warning,
   'error': Error,

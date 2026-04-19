@@ -27,6 +27,7 @@ export default function ShareModal({
   onSaveSettings,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
   const [useSchedule, setUseSchedule] = useState(false);
   const [scheduledStart, setScheduledStart] = useState("");
   const [scheduledEnd, setScheduledEnd] = useState("");
@@ -35,6 +36,10 @@ export default function ShareModal({
   const examUrl = typeof window !== "undefined" 
     ? `${window.location.origin}/exam/${examId}` 
     : `/exam/${examId}`;
+
+  const embedCode = typeof window !== "undefined"
+    ? `<iframe src="${window.location.origin}/embed/exam/${examId}" width="100%" height="450" style="border:none;"></iframe>`
+    : `<iframe src="/embed/exam/${examId}" width="100%" height="450" style="border:none;"></iframe>`;
 
   // Initialize from current settings
   useEffect(() => {
@@ -67,6 +72,23 @@ export default function ShareModal({
       document.body.removeChild(textArea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCopyEmbed = async () => {
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      setCopiedEmbed(true);
+      setTimeout(() => setCopiedEmbed(false), 2000);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = embedCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopiedEmbed(true);
+      setTimeout(() => setCopiedEmbed(false), 2000);
     }
   };
 
@@ -143,6 +165,33 @@ export default function ShareModal({
               >
                 <Icon name={copied ? "check-circle" : "copy"} size="sm" />
                 {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+          </div>
+
+          {/* Embed Code */}
+          <div>
+            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
+              <span>Embed Code (iFrame)</span>
+              <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">New</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={embedCode}
+                readOnly
+                className="flex-1 px-3 py-2.5 bg-muted border border-border rounded-lg text-xs text-gray-600 truncate font-mono"
+              />
+              <button
+                onClick={handleCopyEmbed}
+                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 whitespace-nowrap ${
+                  copiedEmbed 
+                    ? "bg-indigo-500 text-white" 
+                    : "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100"
+                }`}
+              >
+                <Icon name={copiedEmbed ? "check-circle" : "copy"} size="sm" />
+                {copiedEmbed ? "Copied!" : "Copy HTML"}
               </button>
             </div>
           </div>
