@@ -15,6 +15,7 @@ export interface ExamSetWithStats {
   scheduledStart: string | null;
   scheduledEnd: string | null;
   instructions: string[] | null;
+  coverImage: string | null;
   questionCount: number;
   submissionCount: number;
   questionTypeCounts: {
@@ -85,6 +86,7 @@ export async function getExamSets(): Promise<ExamSetWithStats[]> {
       instructions: Array.isArray((exam as ExamSetType & { instructions?: any }).instructions) 
         ? (exam as ExamSetType & { instructions?: any }).instructions as string[]
         : null,
+      coverImage: (exam as any).coverImage ?? null,
       questionCount: exam._count.questions,
       submissionCount: exam._count.submissions,
       questionTypeCounts,

@@ -109,6 +109,7 @@ export default function ExamCardGrid({ examSets }: ExamCardGridProps) {
               totalPoints={exam.totalPoints}
               questionTypeCounts={exam.questionTypeCounts}
               isActive={exam.isActive}
+              coverImage={exam.coverImage}
               onStart={handleSelectExam}
             />
           ))}

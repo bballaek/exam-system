@@ -564,3 +564,15 @@ select.input {
 .quill-content u {
   text-decoration: underline;
 }
+.input {
+  @apply w-full px-3 py-2 text-sm border border-gray-200 rounded-lg 
+  focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500;
+}
+
+.label {
+  @apply text-xs text-gray-500 mb-1 block;
+}
+
+.toggle {
+  @apply w-4 h-4 accent-indigo-600;
+}

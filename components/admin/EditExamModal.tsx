@@ -21,6 +21,9 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
   const [editLockScreen, setEditLockScreen] = useState(false);
   const [editIsActive, setEditIsActive] = useState(false);
   const [editIsHidden, setEditIsHidden] = useState(false);
+  const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
+  const [editExamType, setEditExamType] = useState("general");
+  const [editPairId, setEditPairId] = useState("");
   const [originalIsActive, setOriginalIsActive] = useState(false);
   const [originalIsHidden, setOriginalIsHidden] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -40,6 +43,9 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       const initialIsHidden = (exam as any).isHidden === true;
       setEditIsActive(initialIsActive);
       setEditIsHidden(initialIsHidden);
+      setEditCoverImage(exam.coverImage || null);
+      setEditExamType(exam.examType || "general");
+      setEditPairId(exam.pairId || "");
       setOriginalIsActive(initialIsActive);
       setOriginalIsHidden(initialIsHidden);
     } else {
@@ -53,6 +59,9 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
       setEditLockScreen(false);
       setEditIsActive(false);
       setEditIsHidden(false);
+      setEditCoverImage(null);
+      setEditExamType("general");
+      setEditPairId("");
       setOriginalIsActive(false);
       setOriginalIsHidden(false);
     }
@@ -78,6 +87,9 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
         instructions: instructionsArray,
         shuffleQuestions: editShuffleQuestions,
         lockScreen: editLockScreen,
+        coverImage: editCoverImage,
+        examType: editExamType,
+        pairId: editPairId || null,
       };
       
       // Only include isActive if it has changed from original
@@ -130,218 +142,222 @@ export default function EditExamModal({ exam, onClose, onSuccess }: EditExamModa
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div className="relative rounded-xl border border-border bg-card w-full max-w-md max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-scale-in">
+
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-border flex-shrink-0">
-          <h2 className="text-lg font-bold text-gray-900">
-            <Icon name="settings" size="sm" className="inline mr-2 text-gray-600" />
-            Exam Settings
-          </h2>
+        <div className="px-6 py-4 border-b flex justify-between items-center bg-white rounded-t-2xl">
+          <h2 className="text-base font-semibold text-gray-900">Exam Settings</h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+            <Icon name="close" size="sm" />
+          </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 pt-4">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Exam Set Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Class (Optional)
-              </label>
-              <input
-                type="text"
-                value={editClassroom}
-                onChange={(e) => setEditClassroom(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="e.g. ม.1/1, ม.4/2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Subject (Optional)
-              </label>
-              <input
-                type="text"
-                value={editSubject}
-                onChange={(e) => setEditSubject(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="e.g. Math"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Exam Time (Minutes)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min={1}
-                  max={300}
-                  value={editTimeLimit || ""}
-                  onChange={(e) => setEditTimeLimit(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-24 px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
-                  placeholder="60"
-                />
-                <span className="text-sm text-gray-500">
-                  {editTimeLimit ? `(${Math.floor(editTimeLimit / 60)} ชม. ${editTimeLimit % 60} นาที)` : "ไม่จำกัดเวลา"}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">No time limit</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                คำชี้แจง (Optional)
-              </label>
-              <textarea
-                value={editInstructions}
-                onChange={(e) => setEditInstructions(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[80px]"
-                placeholder="กรอกคำชี้แจงแต่ละบรรทัด&#10;หากไม่กรอก จะใช้คำชี้แจงพื้นฐาน"
-                rows={3}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                แต่ละบรรทัดจะเป็นคำชี้แจงหนึ่งข้อ หากไม่กรอกจะใช้คำชี้แจงพื้นฐาน
-              </p>
-            </div>
-            
-            {/* Shuffle Questions Toggle */}
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Shuffle</p>
-                <p className="text-xs text-gray-500">Questions will be shuffled for each student</p>
-              </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+          {/* Cover Section */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-sm font-medium text-gray-700">Cover Image</p>
               <button
-                type="button"
-                onClick={() => setEditShuffleQuestions(!editShuffleQuestions)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  editShuffleQuestions ? 'bg-indigo-600' : 'bg-gray-200'
-                }`}
+                onClick={() =>
+                  document.getElementById("dashboard-cover-picker")?.classList.toggle("hidden")
+                }
+                className="text-xs text-indigo-600 font-bold"
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    editShuffleQuestions ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                Change
               </button>
             </div>
 
-            {/* Lock Screen Toggle */}
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Lock screen</p>
-                <p className="text-xs text-gray-500">Prevent students from leaving the screen while taking the exam</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditLockScreen(!editLockScreen)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  editLockScreen ? 'bg-indigo-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    editLockScreen ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+            <div className="relative aspect-[16/6] bg-gray-100 rounded-xl overflow-hidden border border-gray-100 group">
+              {editCoverImage ? (
+                <img src={editCoverImage} className="w-full h-full object-cover" alt="Cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-xs text-gray-400 gap-1.5">
+                  <Icon name="image" size="sm" />
+                  <span>No cover set</span>
+                </div>
+              )}
+              {editCoverImage && (
+                <button 
+                  onClick={() => setEditCoverImage(null)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Icon name="close" size="xs" />
+                </button>
+              )}
             </div>
 
-            {/* Active Toggle */}
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Active</p>
-                <p className="text-xs text-gray-500">Students will see this exam when it is active</p>
+            <div id="dashboard-cover-picker" className="hidden mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 animate-fade-in">
+              <div className="grid grid-cols-6 gap-2">
+                {[18, 19, 20, 21, 22, 23, 24, 25].map((n) => {
+                  const img = `/image/cover-exam/${n}.png`;
+                  const isSelected = editCoverImage === img;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setEditCoverImage(img)}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        isSelected ? "border-indigo-600 scale-90" : "border-transparent hover:scale-105"
+                      }`}
+                    >
+                      <img src={img} className="w-full h-full object-cover" alt={`Cover ${n}`} />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-indigo-600/20 flex items-center justify-center">
+                          <Icon name="check-circle" size="xs" className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const newIsActive = !editIsActive;
-                  setEditIsActive(newIsActive);
-                  // Auto-reset isHidden when activating
-                  if (newIsActive) {
-                    setEditIsHidden(false);
-                  }
-                }}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                  editIsActive ? 'bg-green-500' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    editIsActive ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Hide from Homepage Toggle */}
-            <div className={`flex items-center justify-between p-4 rounded-lg border ${editIsActive ? 'bg-gray-50 border-gray-100 opacity-50' : 'bg-muted border-border'}`}>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Hide from Homepage</p>
-                <p className="text-xs text-gray-500">
-                  {editIsActive 
-                    ? "ปิดข้อสอบก่อนจึงจะซ่อนได้" 
-                    : "ข้อสอบจะไม่แสดงในหน้าแรก (Admin ยังเห็นในหน้า Manage)"
-                  }
-                </p>
-              </div>
-              <button
-                type="button"
-                disabled={editIsActive}
-                onClick={() => setEditIsHidden(!editIsHidden)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                  editIsActive ? 'cursor-not-allowed bg-gray-200' : 'cursor-pointer'
-                } ${
-                  editIsHidden && !editIsActive ? 'bg-orange-500' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    editIsHidden && !editIsActive ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
             </div>
           </div>
+
+          {/* Info */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Information</p>
+
+            <input
+              type="text"
+              placeholder="Exam Set Name *"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="input"
+            />
+
+            <input
+              type="text"
+              placeholder="Class (e.g. M.2/3)"
+              value={editClassroom}
+              onChange={(e) => setEditClassroom(e.target.value)}
+              className="input"
+            />
+
+            <input
+              type="text"
+              placeholder="Subject"
+              value={editSubject}
+              onChange={(e) => setEditSubject(e.target.value)}
+              className="input"
+            />
+
+            <textarea
+              rows={3}
+              placeholder="Instructions (one per line)"
+              value={editInstructions}
+              onChange={(e) => setEditInstructions(e.target.value)}
+              className="input"
+            />
+          </div>
+
+          {/* Config */}
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-gray-700">Configuration</p>
+
+            {/* Time */}
+            <div>
+              <label className="label">Duration (minutes)</label>
+              <input
+                type="number"
+                value={editTimeLimit || ""}
+                onChange={(e) =>
+                  setEditTimeLimit(
+                    e.target.value ? parseInt(e.target.value) : null
+                  )
+                }
+                className="input"
+              />
+            </div>
+
+            {/* Exam Type */}
+            <div>
+              <label className="label">Exam Type</label>
+              <select
+                value={editExamType}
+                onChange={(e) => setEditExamType(e.target.value)}
+                className="input"
+              >
+                <option value="general">Regular Exam</option>
+                <option value="pretest">Pre-test</option>
+                <option value="posttest">Post-test</option>
+              </select>
+            </div>
+
+            {(editExamType === "pretest" || editExamType === "posttest") && (
+              <div className="animate-fade-in">
+                <label className="label">Pair ID (for analysis)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. unit-1-chapter-2"
+                  value={editPairId}
+                  onChange={(e) => setEditPairId(e.target.value)}
+                  className="input"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Toggles */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Options</p>
+
+            {[
+              { label: "Active", state: editIsActive, set: (val: boolean) => {
+                setEditIsActive(val);
+                if (val) setEditIsHidden(false);
+              } },
+              { label: "Shuffle Questions", state: editShuffleQuestions, set: setEditShuffleQuestions },
+              { label: "Lock Screen", state: editLockScreen, set: setEditLockScreen },
+              { label: "Hide Exam", state: editIsHidden, set: setEditIsHidden },
+            ].map((t, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between py-2 border-b last:border-none"
+              >
+                <span className="text-sm text-gray-700">{t.label}</span>
+
+                <button
+                  type="button"
+                  onClick={() => t.set(!t.state)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-200 focus:outline-none ${
+                    t.state ? "bg-indigo-600" : "bg-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                      t.state ? "translate-x-[18px]" : "translate-x-[2px]"
+                    }`}
+                  />
+                </button>
+              </div>
+            ))}
+          </div>
+
         </div>
 
-        {/* Fixed Footer */}
-        <div className="p-6 pt-4 border-t border-border flex-shrink-0 flex items-center justify-end gap-3">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t flex justify-end gap-2 bg-white rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSaveEdit}
             disabled={isSavingEdit || !editTitle.trim()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 bg-indigo-600 text-white text-sm rounded-lg font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm"
           >
             {isSavingEdit ? (
               <>
-                <Icon name="spinner" size="sm" />
+                <Icon name="spinner" size="xs" className="animate-spin" />
                 Saving...
               </>
             ) : (
-              <>
-                <Icon name="check-circle" size="sm" />
-                Save
-              </>
+              "Save"
             )}
           </button>
         </div>

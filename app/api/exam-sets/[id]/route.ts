@@ -53,6 +53,7 @@ export async function PATCH(
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     
     // Scheduling fields
+    if (body.coverImage !== undefined) updateData.coverImage = body.coverImage;
     if (body.scheduledStart !== undefined) {
       updateData.scheduledStart = body.scheduledStart ? new Date(body.scheduledStart) : null;
     }

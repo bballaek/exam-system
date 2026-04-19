@@ -35,8 +35,9 @@ interface ExamSet {
   id: string;
   title: string;
   description: string | null;
-  subject: string | null;
+  classroom: string | null;
   isActive: boolean;
+  isHidden: boolean;
   questions: Question[];
   // Scheduling fields
   scheduledStart?: string | null;
@@ -47,6 +48,7 @@ interface ExamSet {
   // Pre-Post Test fields
   examType?: string;
   pairId?: string | null;
+  coverImage?: string | null;
 }
 
 interface QuestionFormData {
@@ -91,6 +93,12 @@ export default function ExamEditorPage() {
   const [lockScreen, setLockScreen] = useState(false);
   const [examType, setExamType] = useState("general");
   const [pairId, setPairId] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [classroom, setClassroom] = useState("");
+  const [subject, setSubject] = useState("");
+  const [instructionsText, setInstructionsText] = useState("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Toggle state for displaying image upload field
@@ -178,6 +186,18 @@ export default function ExamEditorPage() {
       setLockScreen(examSet.lockScreen || false);
       setExamType(examSet.examType || "general");
       setPairId(examSet.pairId || "");
+      setCoverImage(examSet.coverImage || null);
+      setIsActive(examSet.isActive || false);
+      setIsHidden(examSet.isHidden || false);
+      setClassroom(examSet.classroom || "");
+      setSubject(examSet.subject || "");
+      
+      // Convert instructions array to multiline string
+      if (Array.isArray(examSet.instructions)) {
+        setInstructionsText(examSet.instructions.join("\n"));
+      } else {
+        setInstructionsText("");
+      }
     }
   }, [examSet]);
 
@@ -196,6 +216,12 @@ export default function ExamEditorPage() {
           lockScreen,
           examType,
           pairId: pairId || null,
+          coverImage,
+          isActive,
+          isHidden,
+          classroom: classroom || null,
+          subject: subject || null,
+          instructions: instructionsText.split("\n").filter(line => line.trim() !== ""),
         }),
       });
       if (response.ok) {
@@ -1094,201 +1120,190 @@ export default function ExamEditorPage() {
         onSuccess={fetchExamSet}
       />
 
-      {/* Settings Modal */}
+      {/* Settings Modal - Redesigned for Theme Consistency */}
       {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Icon name="settings" size="sm" className="text-gray-600" />
-                ตั้งค่าข้อสอบ
-              </h2>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-              >
-                <Icon name="close" size="sm" />
-              </button>
-            </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-scale-in">
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              {/* Time Limit */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  เวลาทำข้อสอบ (นาที)
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min="0"
-                    value={timeLimitMinutes || ""}
-                    onChange={(e) => setTimeLimitMinutes(e.target.value ? parseInt(e.target.value) : null)}
-                    placeholder="60"
-                    className="w-24 px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
-                  />
-                  <span className="text-sm text-gray-500">
-                    {timeLimitMinutes ? `(${Math.floor(timeLimitMinutes / 60)} ชม. ${timeLimitMinutes % 60} นาที)` : "ไม่จำกัดเวลา"}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400 mt-1">ปล่อยว่างไว้ = ไม่จำกัดเวลา</p>
+      {/* Header */}
+      <div className="px-6 py-4 border-b flex justify-between items-center bg-white rounded-t-2xl">
+        <h2 className="text-base font-semibold text-gray-900">Exam Settings</h2>
+        <button onClick={() => setShowSettingsModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+          <Icon name="close" size="sm" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+        {/* Cover */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-sm font-medium text-gray-700">Cover Image</p>
+            <button
+              onClick={() =>
+                document.getElementById("cover-picker")?.classList.toggle("hidden")
+              }
+              className="text-xs text-indigo-600 font-bold"
+            >
+              Change
+            </button>
+          </div>
+
+          <div className="aspect-[16/6] bg-gray-100 rounded-lg overflow-hidden border border-gray-100">
+            {coverImage ? (
+              <img src={coverImage} className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-gray-400">
+                No cover
               </div>
+            )}
+          </div>
 
-              {/* Scheduled Start */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  เวลาเปิดสอบ
-                </label>
-                <input
-                  type="datetime-local"
-                  value={scheduledStart}
-                  onChange={(e) => setScheduledStart(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              {/* Scheduled End */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  เวลาปิดสอบ
-                </label>
-                <input
-                  type="datetime-local"
-                  value={scheduledEnd}
-                  onChange={(e) => setScheduledEnd(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              {/* Shuffle Questions Toggle */}
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">สลับลำดับข้อสอบ</p>
-                  <p className="text-xs text-gray-500">ลำดับข้อสอบจะสุ่มใหม่สำหรับนักเรียนแต่ละคน</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShuffleQuestions(!shuffleQuestions)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    shuffleQuestions ? 'bg-indigo-600' : 'bg-gray-200'
+          <div id="cover-picker" className="hidden mt-3 grid grid-cols-6 gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+            {[18,19,20,21,22,23,24,25].map((n) => {
+              const img = `/image/cover-exam/${n}.png`;
+              const isSelected = coverImage === img;
+              return (
+                <img
+                  key={n}
+                  src={img}
+                  onClick={() => setCoverImage(img)}
+                  className={`cursor-pointer rounded-md border-2 transition-all ${
+                    isSelected ? "border-indigo-600 scale-90" : "border-transparent hover:scale-105"
                   }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      shuffleQuestions ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Lock Screen Toggle */}
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">ล็อกหน้าจอระหว่างทำข้อสอบ</p>
-                  <p className="text-xs text-gray-500">ป้องกันนักเรียนออกจากหน้าจอระหว่างทำข้อสอบ</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setLockScreen(!lockScreen)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    lockScreen ? 'bg-indigo-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      lockScreen ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Exam Type Selector */}
-              <div className="p-4 bg-muted rounded-lg border border-border">
-                <p className="text-sm font-medium text-gray-700 mb-3">ประเภทข้อสอบ</p>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="examType"
-                      value="general"
-                      checked={examType === "general"}
-                      onChange={(e) => setExamType(e.target.value)}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700">ทั่วไป (General)</span>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="examType"
-                      value="pretest"
-                      checked={examType === "pretest"}
-                      onChange={(e) => setExamType(e.target.value)}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700">ก่อนเรียน (Pre-test)</span>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="examType"
-                      value="posttest"
-                      checked={examType === "posttest"}
-                      onChange={(e) => setExamType(e.target.value)}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700">หลังเรียน (Post-test)</span>
-                  </label>
-                </div>
-
-                {/* Pair ID - show only for pre/post test */}
-                {(examType === "pretest" || examType === "posttest") && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      รหัสชุดคู่ (Pair ID)
-                    </label>
-                    <input
-                      type="text"
-                      value={pairId}
-                      onChange={(e) => setPairId(e.target.value)}
-                      placeholder="เช่น unit-1, chapter-3"
-                      className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                    <p className="mt-1.5 text-xs text-gray-500">
-                      ข้อสอบ Pre และ Post ที่มี Pair ID เดียวกันจะถูกนำมาวิเคราะห์เปรียบเทียบด้วยกัน
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={saveSettings}
-                disabled={isSavingSettings}
-                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isSavingSettings ? (
-                  <>
-                    <Icon name="spinner" size="sm" />
-                    กำลังบันทึก...
-                  </>
-                ) : (
-                  "บันทึก"
-                )}
-              </button>
-            </div>
+                />
+              );
+            })}
           </div>
         </div>
-      )}
+
+        {/* Info */}
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-gray-700">Information</p>
+
+          <input
+            type="text"
+            placeholder="Class (e.g. M.2/3)"
+            value={classroom}
+            onChange={(e) => setClassroom(e.target.value)}
+            className="input"
+          />
+
+          <input
+            type="text"
+            placeholder="Subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="input"
+          />
+
+          <textarea
+            rows={3}
+            placeholder="Instructions (one per line)"
+            value={instructionsText}
+            onChange={(e) => setInstructionsText(e.target.value)}
+            className="input"
+          />
+        </div>
+
+        {/* Config */}
+        <div className="space-y-4">
+          <p className="text-sm font-medium text-gray-700">Configuration</p>
+
+          {/* Time */}
+          <div>
+            <label className="label">Duration (minutes)</label>
+            <input
+              type="number"
+              value={timeLimitMinutes || ""}
+              onChange={(e) =>
+                setTimeLimitMinutes(
+                  e.target.value ? parseInt(e.target.value) : null
+                )
+              }
+              className="input"
+            />
+          </div>
+
+          {/* Exam Type */}
+          <div>
+            <label className="label">Exam Type</label>
+            <select
+              value={examType}
+              onChange={(e) => setExamType(e.target.value)}
+              className="input"
+            >
+              <option value="general">Regular</option>
+              <option value="pretest">Pre-test</option>
+              <option value="posttest">Post-test</option>
+            </select>
+          </div>
+
+          {(examType === "pretest" || examType === "posttest") && (
+            <input
+              type="text"
+              placeholder="Pair ID"
+              value={pairId}
+              onChange={(e) => setPairId(e.target.value)}
+              className="input"
+            />
+          )}
+        </div>
+
+        {/* Toggles */}
+<div className="space-y-3">
+  <p className="text-sm font-medium text-gray-700">Options</p>
+
+  {[
+    { label: "Active", state: isActive, set: setIsActive },
+    { label: "Shuffle Questions", state: shuffleQuestions, set: setShuffleQuestions },
+    { label: "Lock Screen", state: lockScreen, set: setLockScreen },
+    { label: "Hide Exam", state: isHidden, set: setIsHidden },
+  ].map((t, i) => (
+    <div
+      key={i}
+      className="flex items-center justify-between py-2 border-b last:border-none"
+    >
+      <span className="text-sm text-gray-700">{t.label}</span>
+
+      <button
+        type="button"
+        onClick={() => t.set(!t.state)}
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-200 focus:outline-none ${
+          t.state ? "bg-indigo-600" : "bg-gray-200"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+            t.state ? "translate-x-[18px]" : "translate-x-[2px]"
+          }`}
+        />
+      </button>
+    </div>
+  ))}
+</div>
+
+      </div>
+
+      {/* Footer */}
+      <div className="px-6 py-4 border-t flex justify-end gap-2">
+        <button
+          onClick={() => setShowSettingsModal(false)}
+          className="px-4 py-2 text-sm text-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={saveSettings}
+          className="px-5 py-2 bg-[#B93D49] text-white text-sm rounded-lg"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 }

@@ -21,6 +21,7 @@ interface ExamCardProps {
   totalPoints?: number;
   questionTypeCounts?: QuestionTypeCounts;
   isActive: boolean;
+  coverImage?: string | null;
   onStart: (id: string) => void;
 }
 
@@ -34,6 +35,7 @@ function ExamCard({
   totalPoints,
   questionTypeCounts,
   isActive,
+  coverImage,
   onStart,
 }: ExamCardProps) {
   const handleStart = React.useCallback(() => {
@@ -46,13 +48,34 @@ function ExamCard({
         group relative
         bg-white
         rounded-xl
-        border transition-all duration-200 ease-out
+        border transition-all duration-300 ease-out overflow-hidden
         ${isActive 
-          ? "border-gray-200 hover:border-gray-300 hover:shadow-lg" 
+          ? "border-gray-200 hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1" 
           : "border-gray-100 opacity-60"
         }
       `}
     >
+      {/* Cover Image Header */}
+      <div className="relative aspect-[16/7] overflow-hidden bg-gray-100">
+        {coverImage ? (
+          <img 
+            src={coverImage} 
+            alt={title} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 flex items-center justify-center">
+            <Icon name="image" className="w-8 h-8 text-indigo-300 opacity-50" />
+          </div>
+        )}
+        
+        {/* Animated Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Bottom edge gradient to blend text better if needed */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/10 to-transparent" />
+      </div>
+
       <div className="p-5">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-3">

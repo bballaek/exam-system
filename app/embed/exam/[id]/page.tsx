@@ -54,13 +54,28 @@ export default async function EmbedExamPage({ params }: { params: Promise<{ id: 
     <div className="w-full flex items-center justify-center min-h-screen bg-transparent p-4 font-sans">
       <div className="w-full max-w-lg bg-card rounded-[24px] shadow-sm border border-border overflow-hidden ring-1 ring-black/5 hover:shadow-md transition-shadow duration-300">
         
-        {/* Banner Area (Mockup similar SVG pattern / Gradient) */}
-        <div className="relative h-48 w-full bg-gradient-to-br from-pink-100 via-indigo-50 to-blue-100 p-4 overflow-hidden">
-          {/* Decorative shapes to make it look illustrative */}
-          <div className="absolute top-[-20%] left-[-10%] w-32 h-32 bg-pink-200/50 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-40 h-40 bg-blue-200/50 rounded-full blur-2xl"></div>
+        {/* Banner Area */}
+        <div className="relative h-48 w-full bg-gray-100 overflow-hidden">
+          {examSet.coverImage ? (
+            <img 
+              src={examSet.coverImage} 
+              alt={examSet.title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-pink-100 via-indigo-50 to-blue-100 p-4">
+              {/* Decorative shapes to make it look illustrative */}
+              <div className="absolute top-[-20%] left-[-10%] w-32 h-32 bg-pink-200/50 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-[-20%] right-[-10%] w-40 h-40 bg-blue-200/50 rounded-full blur-2xl"></div>
+              
+              <div className="absolute inset-0 flex items-center justify-center opacity-70 pointer-events-none">
+                <Icon name="document" size="xl" className="text-blue-500/20 w-32 h-32 absolute -translate-x-12 translate-y-4" />
+                <Icon name="check-circle" size="xl" className="text-teal-500/20 w-24 h-24 absolute translate-x-16 -translate-y-6" />
+              </div>
+            </div>
+          )}
           
-          <div className="relative z-10 flex justify-between items-start">
+          <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-start">
             {/* Subject / Category Badge */}
             <div className="bg-white/80 backdrop-blur-md text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">
               {examSet.subject || "บททดสอบ"}
