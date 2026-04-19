@@ -105,9 +105,7 @@ export default function PublicExamPage() {
   // Instructions accepted checkbox
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
   
-  // Start exam confirmation modal
-  const [showStartConfirm, setShowStartConfirm] = useState(false);
-  
+  // Start exam confirmation modal removed
 
 
   // Session tracking for real-time monitoring
@@ -852,7 +850,7 @@ export default function PublicExamPage() {
                       toast.showToast("warning", "กรุณากรอกข้อมูลให้ครบถ้วน");
                       return;
                     }
-                    setShowStartConfirm(true);
+                    handleStartExam();
                   }}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all bg-gray-900 hover:bg-gray-800 text-white"
                 >
@@ -860,55 +858,6 @@ export default function PublicExamPage() {
                 </button>
               </div>
             </div>
-
-            {/* Start Confirmation Modal */}
-            {showStartConfirm && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-                <div className="rounded-xl border border-border bg-card max-w-md w-full p-6 text-center">
-                  <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon name="warning" size="lg" className="text-amber-600" />
-                  </div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-2">คำเตือนก่อนเริ่มสอบ</h2>
-                  <div className="text-left bg-muted rounded-lg p-4 mb-4">
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      {examSet.lockScreen && (
-                        <li className="flex gap-2 items-start">
-                          <span className="text-red-500 font-bold">⚠️</span>
-                          <span><strong className="text-red-600">ห้ามสลับหน้าจอ</strong> หรือเปิดแท็บอื่นระหว่างทำข้อสอบ</span>
-                        </li>
-                      )}
-                      {examSet.lockScreen && (
-                        <li className="flex gap-2 items-start">
-                          <span className="text-red-500 font-bold">⚠️</span>
-                          <span>สลับหน้าจอเกิน <strong className="text-red-600">3 ครั้ง</strong> ระบบจะส่งคำตอบอัตโนมัติ</span>
-                        </li>
-                      )}
-                      <li className="flex gap-2 items-start">
-                        <span className="text-amber-500 font-bold">⏱️</span>
-                        <span>เมื่อกดเริ่มแล้ว เวลาจะเริ่มนับถอยหลังทันที</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => setShowStartConfirm(false)} 
-                      className="flex-1 py-3 bg-muted text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-                    >
-                      ยกเลิก
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setShowStartConfirm(false);
-                        handleStartExam();
-                      }} 
-                      className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-                    >
-                      เริ่มเลย
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
