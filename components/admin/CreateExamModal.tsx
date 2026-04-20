@@ -64,6 +64,7 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
           scheduledStart: null,
           scheduledEnd: null,
           instructions: Array.isArray(newExam.instructions) ? newExam.instructions : null,
+          coverImage: newExam.coverImage ?? null,
           questionCount: 0,
           submissionCount: 0,
           questionTypeCounts: {
