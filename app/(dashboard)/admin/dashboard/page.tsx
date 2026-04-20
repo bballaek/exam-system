@@ -67,12 +67,10 @@ export default function AdminDashboardPage() {
   // Transform exam sets for filter component
   const examSetsForFilter: ExamSet[] = useMemo(() => {
     return examSets.map(exam => ({
-      id: exam.id,
-      title: exam.title,
-      isActive: exam.isActive,
+      ...exam,
       questionCount: exam.questionCount || exam._count?.questions || 0,
       submissionCount: exam.submissionCount || exam._count?.submissions || 0,
-    }));
+    } as ExamSet));
   }, [examSets]);
 
   // Transform submissions
