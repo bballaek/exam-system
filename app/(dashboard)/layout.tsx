@@ -37,7 +37,7 @@ export default function DashboardGroupLayout({
             <Icon name="menu" size="md" className="text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo-light.svg" alt="MasterExam" className="w-8 h-8" />
+            <img src="/favicon.svg" alt="MasterExam" className="w-8 h-8" />
             <span className="font-semibold text-gray-900">MasterExam</span>
           </div>
           <div className="w-10" />

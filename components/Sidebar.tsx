@@ -112,7 +112,7 @@ function SidebarContent({
         <div className="px-4 pt-4 pb-3 border-b border-gray-200/70 bg-white/60 backdrop-blur">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <img src="/logo-light.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
+              <img src="/favicon.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
               <div className="min-w-0">
                 <div className="font-semibold text-[15px] text-gray-900 leading-tight truncate">
                   MasterExam
@@ -142,7 +142,7 @@ function SidebarContent({
       {/* Logo Area */}
       <div className={twMerge("py-4 px-4", mode === "mobile" && "hidden")}>
         <div className="flex items-center gap-3">
-          <img src="/logo-light.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
+          <img src="/favicon.svg" alt="MasterExam" className="w-9 h-9 flex-shrink-0" />
           <div className="flex flex-col">
             <span className="font-semibold text-[15px] text-gray-900 leading-tight">MasterExam</span>
             <span className="text-[11px] text-gray-400 leading-tight">by Aekkarat Wongchalee</span>

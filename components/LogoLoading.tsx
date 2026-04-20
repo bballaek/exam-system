@@ -34,7 +34,7 @@ export default function LogoLoading({ text, size = "md", fullPage = false }: Log
         style={{ width: config.logo, height: config.logo }}
       >
         <img
-          src="/logo-light.svg"
+          src="/favicon.svg"
           alt="MasterExam"
           className="w-full h-full"
           style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.08))" }}

@@ -13,12 +13,7 @@ export const metadata: Metadata = {
   title: "Exam | Aekkarat Workspace",
   description: "Eco system for education",
   icons: {
-    icon: [
-      {
-        url: "/favicon.svg",
-        type: "image/svg+xml",
-      },
-    ],
+    icon: "/favicon.ico",
   },
 };
 
