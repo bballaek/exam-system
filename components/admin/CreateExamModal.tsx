@@ -94,56 +94,67 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0"
         onClick={onClose}
       />
-      <div className="relative rounded-xl border border-border bg-card w-full max-w-md p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Create New Exam Set
-        </h2>
+      <div className="relative bg-white w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-scale-in overflow-hidden">
+        
+        {/* Header */}
+        <div className="px-6 py-4 border-b flex justify-between items-center bg-white">
+          <h2 className="text-base font-semibold text-gray-900">
+            Create New Exam Set
+          </h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+            <Icon name="close" size="sm" />
+          </button>
+        </div>
 
-        <div className="space-y-4">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="label">
               Exam Set Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={newExamTitle}
               onChange={(e) => setNewExamTitle(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="input"
               placeholder="e.g. Midterm Exam 1/2568"
               autoFocus
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="label">
               Class (Optional)
             </label>
             <input
               type="text"
               value={newExamClassroom}
               onChange={(e) => setNewExamClassroom(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="input"
               placeholder="e.g. ม.1/1, ม.4/2"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="label">
               Subject (Optional)
             </label>
             <input
               type="text"
               value={newExamSubject}
               onChange={(e) => setNewExamSubject(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="input"
               placeholder="e.g. Math"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="label">
               Exam Time (Minutes)
             </label>
             <div className="flex items-center gap-3">
@@ -153,53 +164,52 @@ export default function CreateExamModal({ isOpen, onClose, onSuccess }: CreateEx
                 max={300}
                 value={newExamTimeLimit || ""}
                 onChange={(e) => setNewExamTimeLimit(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-24 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
+                className="input w-32"
                 placeholder="60"
               />
-              <span className="text-sm text-gray-500">
+              <span className="text-xs text-gray-500">
                 {newExamTimeLimit ? `(${Math.floor(newExamTimeLimit / 60)} ชม. ${newExamTimeLimit % 60} นาที)` : "ไม่จำกัดเวลา"}
               </span>
             </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="label">
               คำชี้แจง (Optional)
             </label>
             <textarea
               value={newExamInstructions}
               onChange={(e) => setNewExamInstructions(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border bg-card rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[100px]"
+              className="input min-h-[100px] resize-y"
               placeholder="กรอกคำชี้แจงแต่ละบรรทัด&#10;หากไม่กรอก จะใช้คำชี้แจงพื้นฐาน"
               rows={4}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              แต่ละบรรทัดจะเป็นคำชี้แจงหนึ่งข้อ หากไม่กรอกจะใช้คำชี้แจงพื้นฐาน
+            <p className="text-[10px] text-gray-400 mt-1.5 italic">
+              * แต่ละบรรทัดจะเป็นคำชี้แจงหนึ่งข้อ
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 mt-6">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t flex justify-end gap-2 bg-white">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            ยกเลิก
+            Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={isCreating || !newExamTitle.trim()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 bg-indigo-600 text-white text-sm rounded-lg font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm"
           >
             {isCreating ? (
               <>
-                <Icon name="spinner" size="sm" />
+                <Icon name="spinner" size="xs" className="animate-spin" />
                 Creating...
               </>
             ) : (
-              <>
-                <Icon name="plus" size="sm" />
-                Create
-              </>
+              "Create"
             )}
           </button>
         </div>

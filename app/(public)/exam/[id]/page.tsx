@@ -27,7 +27,10 @@ interface ExamSet {
   id: string;
   title: string;
   description: string | null;
+  subject: string | null;
+  classroom: string | null;
   isActive: boolean;
+  isHidden: boolean;
   questions: Question[];
   // Scheduling fields
   scheduledStart?: string | null;
@@ -36,6 +39,9 @@ interface ExamSet {
   shuffleQuestions?: boolean;
   lockScreen?: boolean;
   instructions?: string[] | null;
+  coverImage?: string | null;
+  examType?: string;
+  pairId?: string | null;
 }
 
 interface StudentInfo {

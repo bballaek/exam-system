@@ -35,6 +35,7 @@ interface ExamSet {
   id: string;
   title: string;
   description: string | null;
+  subject: string | null;
   classroom: string | null;
   isActive: boolean;
   isHidden: boolean;
@@ -45,6 +46,7 @@ interface ExamSet {
   timeLimitMinutes?: number | null;
   shuffleQuestions?: boolean;
   lockScreen?: boolean;
+  instructions?: string[] | null;
   // Pre-Post Test fields
   examType?: string;
   pairId?: string | null;

@@ -5,10 +5,16 @@ export interface ExamSet {
   title: string;
   description: string | null;
   subject: string | null;
+  classroom: string | null;
+  coverImage: string | null;
+  examType: string;
+  pairId: string | null;
   isActive: boolean;
+  isHidden: boolean;
   createdAt: string;
   timeLimitMinutes?: number | null;
   shuffleQuestions?: boolean;
+  lockScreen?: boolean;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
   questionCount: number;

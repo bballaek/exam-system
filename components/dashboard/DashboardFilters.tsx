@@ -7,9 +7,15 @@ import Icon from "@/components/Icon";
 export interface ExamSet {
   id: string;
   title: string;
+  description: string | null;
+  subject: string | null;
+  classroom: string | null;
   isActive: boolean;
+  isHidden: boolean;
+  createdAt: string;
   questionCount: number;
   submissionCount: number;
+  coverImage: string | null;
 }
 
 interface DashboardFiltersProps {
@@ -269,7 +275,7 @@ export default function DashboardFilters({
       {/* Manage Exams Link */}
       <Link
         href="/admin/exams"
-        className="flex items-center gap-1.5 px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
       >
         <Icon name="settings" size="sm" />
         <span className="hidden sm:inline">Manage</span>
